@@ -1,11 +1,14 @@
 package com.example.inha_capston;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -136,4 +139,31 @@ public class PlayFragment extends Fragment
         mContext = context;
         mActivity = (Activity) context;
     }
+
+
+//    /**
+//     * stop record
+//     */
+//    private void stop_Recording() {
+//        timer.stop();
+//        // erase filename
+//        filename_textView.setText("");
+//
+//        mediaRecorder.stop();
+//        mediaRecorder.release();
+//        mediaRecorder = null;
+//    }
+//
+//    /**
+//     * check permissions for mic recording
+//     * @return true for yes
+//     */
+//    private boolean checkPermissions() {
+//        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+//            return true;
+//        else
+//            ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.RECORD_AUDIO}, MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
+//        return false;
+//    }
+
 }

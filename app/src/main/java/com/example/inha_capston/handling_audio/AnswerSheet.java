@@ -1,5 +1,7 @@
 package com.example.inha_capston.handling_audio;
 
+import android.media.MediaMetadataRetriever;
+
 import java.io.Serializable;
 import java.lang.String;
 import java.util.ArrayList;
@@ -9,12 +11,17 @@ import java.util.ArrayList;
  */
 public class AnswerSheet implements Serializable
 {
+
+
     private ArrayList<String> pitches;
     private ArrayList<Double> timeStamps;
     private noteConverter converter;
 
     private double starttimeStamp;
     private double endtimeStamp;
+
+    private String metaArtist;
+    private String metaTitle;
 
     public AnswerSheet()
     {
@@ -43,6 +50,8 @@ public class AnswerSheet implements Serializable
         timeStamps.add(time);
     }
 
+    public void setTimeStamps(ArrayList<Double> timeStamps) { this.timeStamps = timeStamps; }
+    public void setPitches(ArrayList<String> pitches) { this.pitches = pitches; }
     public ArrayList<String> getPitches() {
         return pitches;
     }
@@ -51,7 +60,6 @@ public class AnswerSheet implements Serializable
     public double getEndtimeStamp() {
         return endtimeStamp;
     }
-
     public void setEndtimeStamp(double endtimeStamp) {
         this.endtimeStamp = endtimeStamp;
     }
