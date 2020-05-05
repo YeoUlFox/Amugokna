@@ -1,6 +1,7 @@
 package com.example.inha_capston.handling_audio;
 
 import android.content.Context;
+import android.media.MediaMetadataRetriever;
 import android.util.Log;
 
 import com.arthenica.mobileffmpeg.Config;
@@ -9,7 +10,9 @@ import com.arthenica.mobileffmpeg.FFmpeg;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -35,7 +38,17 @@ public class AnswerSheetMaker
     private TarsosDSPAudioFormat tarsosDSPAudioFormat;
     private PitchDetectionHandler pitchDetectionHandler;
     private AudioDispatcher audioDispatcher;
-    private AnswerSheet retAnswerSheet;
+
+    // variable to make answer Sheet
+    private ArrayList<String> pitches;
+    private ArrayList<Double> timeStamps;
+    private noteConverter converter;
+
+    // for metaData and music file info
+    private MediaMetadataRetriever metadataRetriever;
+    private String filePath;
+
+    private static final double UNIT_TERM = 0.0808;     // used by trimming
 
     /**
      * constructor init variable and call pitch detection func
@@ -44,8 +57,11 @@ public class AnswerSheetMaker
      */
     public AnswerSheetMaker(Context mContext, String filePath)
     {
-        retAnswerSheet = new AnswerSheet();
+        converter = new noteConverter();
+        pitches = new ArrayList<>();
+        timeStamps = new ArrayList<>();
 
+        // audio dsp
         tarsosDSPAudioFormat  = new TarsosDSPAudioFormat(TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
                 22050,
                 2 * 8,
@@ -58,54 +74,170 @@ public class AnswerSheetMaker
             @Override
             public void handlePitch(PitchDetectionResult res, AudioEvent e) {
                 final float pitchHz = res.getPitch();
-                if (res.isPitched() && pitchHz != -1 && res.getProbability() > 0.90) {
-                    retAnswerSheet.addPitch(pitchHz);
-                    retAnswerSheet.addTimes(e.getTimeStamp());
+                if (res.isPitched() && pitchHz != -1 && res.getProbability() > 0.95) {
+                    pitches.add(converter.getNoteName(pitchHz));
+                    timeStamps.add(e.getTimeStamp());
                 }
             }
         };
 
+        // detection start
         isDetectSuccess = detectPitch(mContext, filePath);
 
-//        for(int i = 0; i < retAnswerSheet.getPitches().size(); i++)
-//        {
-//            Log.i(TAG, "< " + i + ", " + retAnswerSheet.getPitches().get(i) + " " + retAnswerSheet.getTimeStamps().get(i) + " >");
-//        }
-        // TODO : optimizer implement
+        if(isDetectSuccess) {
+            trimAnswerSheet();
+        }
+    }
+
+    /**
+     * handle redundant pitches and noisy pitches
+     */
+    private void trimAnswerSheet()
+    {
+        int length = pitches.size();
+        String pos0_note, pos1_note;
+        double pos0_time, pos1_time;
+
+        final int MUL_UNIT = 5;         // multiply with term unit
+
+        for(int pos = 0; pos < length;)
+        {
+            pos0_note = pitches.get(pos);
+            pos0_time = timeStamps.get(pos);
+
+            if(pos + 1 < length)
+            {
+                pos1_note = pitches.get(pos + 1);
+                pos1_time = timeStamps.get(pos + 1);
+
+                // check equal note
+                if(pos0_note.equals(pos1_note))
+                {
+                    // check term with pos1 (long check)
+                    if (pos1_time - pos0_time > UNIT_TERM * MUL_UNIT)
+                    {
+                        pitches.set(pos, null);
+                        timeStamps.set(pos, null);
+                        pos++;
+                    }
+                    else
+                    {
+                        // check continuous note
+                        for(;pos + 1 < length;) {
+                            pos++;
+                            pos0_note = pos1_note;
+                            pos0_time = pos1_time;
+                            pos1_note = pitches.get(pos + 1);
+                            pos1_time = timeStamps.get(pos + 1);
+
+                            if (pos0_note.equals(pos1_note) && pos1_time - pos0_time < UNIT_TERM * MUL_UNIT) {
+                                pitches.set(pos, null);
+                                timeStamps.set(pos, null);
+                            }
+                            else {
+                                // F - F - G or F - F -------- F
+                                pos++;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // only one step in pitch difference
+                    // F - G
+                    pitches.set(pos, null);
+                    timeStamps.set(pos, null);
+                    pos++;
+                }
+            }
+            else
+            {
+                // ... F last one note
+                pitches.set(pos, null);
+                timeStamps.set(pos, null);
+                pos++;
+            }
+        }
+
+        // remove null element and short term noisy
+        ArrayList<String> tmp_pitches = new ArrayList<>();
+        ArrayList<Double> tmp_timeStamps = new ArrayList<>();
+
+        for(int pos0 = 0; pos0 < length;)
+        {
+            if(pitches.get(pos0) != null)
+            {
+                for(int pos1 = pos0; pos1 < length;)
+                {
+                    pos1++;
+
+                    if(pitches.get(pos1) != null) {
+                        if(timeStamps.get(pos1) - timeStamps.get(pos0) >  UNIT_TERM * 3) {
+                            tmp_pitches.add(pitches.get(pos0));
+                            tmp_timeStamps.add(timeStamps.get(pos0));
+                            tmp_pitches.add(pitches.get(pos1));
+                            tmp_timeStamps.add(timeStamps.get(pos1));
+                        }
+                        pos0 = pos1 + 1;
+                        break;
+                    }
+                }
+            }
+            else {
+                // if null
+                pos0++;
+            }
+        }
+
+        // replace first arrayList
+        pitches = tmp_pitches;
+        timeStamps = tmp_timeStamps;
     }
 
     /**
      * get processed retAnswerSheet
-     * check pitch detection thread is
      * @return answerSheet object
      */
-    public AnswerSheet getAnswerSheet()
+    public AnswerSheet makeAnswerSheet()
     {
-        if (isDetectSuccess && retAnswerSheet != null)
+        if (!isDetectSuccess)
         {
-            audioDispatcher = null; // release dispatcher
-            return retAnswerSheet;
+            Log.e(TAG, "Error in detection!");
+            return null;
         }
 
-        Log.e(TAG, "Error in detection or answer sheet is null");
-        return null;
+        audioDispatcher = null; // release dispatcher
+
+        // import meta data from music file
+        AnswerSheet answerSheet = new AnswerSheet(pitches, timeStamps);
+        answerSheet.setMetaTitle(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        answerSheet.setMetaArtist(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+        answerSheet.setFilePath(filePath);
+
+        return answerSheet;
     }
+
 
     /**
      *  processing ffmpeg incoding and decoding
      *  with result file, it will dectect pitch with tarsosDSP
      * @param mContext
-     * @param filePath
+     * @param path
      * @return success : true, else false
      */
-    private boolean detectPitch(Context mContext, String filePath)
+    private boolean detectPitch(Context mContext, String path)
     {
-        File audioFile = new File(filePath);
-        String path = audioFile.getAbsolutePath();
-        File file = new File(mContext.getFilesDir(), "out.wav");
+        File audioFile = new File(path);
+        filePath = audioFile.getAbsolutePath();
+        File file = new File(mContext.getFilesDir(), "out.wav");    // output
+
+        // for metadata
+        metadataRetriever = new MediaMetadataRetriever();
+        metadataRetriever.setDataSource(filePath);
 
         // ffmpeg incoding and decoding
-        int rc = FFmpeg.execute(getCommand(file.getAbsolutePath(), path, 22050, 0, -1));
+        int rc = FFmpeg.execute(getCommand(file.getAbsolutePath(), filePath, 22050, 0, -1));
         if (rc == RETURN_CODE_SUCCESS) {
             Log.i(Config.TAG, "Command execution completed successfully.");
         } else if (rc == RETURN_CODE_CANCEL) {
@@ -120,8 +252,9 @@ public class AnswerSheetMaker
         try {
             FileInputStream fileInputStream = new FileInputStream(file); // TODO : check file input Stream is needed to close
             audioDispatcher = new AudioDispatcher(new UniversalAudioInputStream(fileInputStream, tarsosDSPAudioFormat), 1024, 0);
-        } catch (FileNotFoundException e) {
-            Log.i(TAG, "file not found error 'ffmpeg out file'");
+            fileInputStream.close();
+        } catch (IOException e) {
+            Log.i(TAG, "file not found error 'ffmpeg out file' : " + e.getMessage());
             return false;
         }
 
@@ -132,13 +265,13 @@ public class AnswerSheetMaker
         try {
             Thread pitchThread = new Thread(audioDispatcher, "Pitch Detection Thread");
             pitchThread.start();
-            pitchThread.join();
+            pitchThread.join();                 // main thread will be waited
         } catch (InterruptedException e) {
             // interrupt while pitch detection
-            Log.e(TAG, e.getMessage() + " ");
+            Log.e(TAG, "Error while detection : " + e.getMessage());
 
             audioDispatcher.stop();
-            audioDispatcher = null;
+            audioDispatcher = null; // release dispatcher
             return false;
         }
 

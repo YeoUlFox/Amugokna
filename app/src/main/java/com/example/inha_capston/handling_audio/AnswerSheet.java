@@ -11,44 +11,26 @@ import java.util.ArrayList;
  */
 public class AnswerSheet implements Serializable
 {
-
-
     private ArrayList<String> pitches;
     private ArrayList<Double> timeStamps;
-    private noteConverter converter;
-
-    private double starttimeStamp;
-    private double endtimeStamp;
 
     private String metaArtist;
     private String metaTitle;
+    private String filePath;
 
-    public AnswerSheet()
+    public AnswerSheet(ArrayList<String> pitches, ArrayList<Double> timeStamps)
     {
-        converter = new noteConverter();
-        pitches = new ArrayList<>();
-        timeStamps = new ArrayList<>();
+        this.pitches = pitches;
+        this.timeStamps = timeStamps;
     }
 
-    /**
-     * add ArrayList of pitches
-     * @param Hz
-     *          detected value
-     */
-    public void addPitch(float Hz)
-    {
-        pitches.add(converter.getNoteName(Hz));
-    }
+    public void setMetaArtist(String metaArtist) { this.metaArtist = metaArtist; }
+    public void setMetaTitle(String metaTitle) { this.metaTitle = metaTitle; }
+    public String getMetaArtist() { return metaArtist; }
+    public String getMetaTitle() { return metaTitle; }
 
-    /**
-     *  add to ArrayList of TimeStamp
-     * @param time
-     *          timeStamp from pitchDetection Handler
-     */
-    public void addTimes(double time)
-    {
-        timeStamps.add(time);
-    }
+    public void setFilePath(String filePath) { this.filePath = filePath; }
+    public String getFilePath() { return filePath; }
 
     public void setTimeStamps(ArrayList<Double> timeStamps) { this.timeStamps = timeStamps; }
     public void setPitches(ArrayList<String> pitches) { this.pitches = pitches; }
@@ -56,11 +38,4 @@ public class AnswerSheet implements Serializable
         return pitches;
     }
     public ArrayList<Double> getTimeStamps() { return timeStamps; }
-
-    public double getEndtimeStamp() {
-        return endtimeStamp;
-    }
-    public void setEndtimeStamp(double endtimeStamp) {
-        this.endtimeStamp = endtimeStamp;
-    }
 }

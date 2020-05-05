@@ -68,8 +68,6 @@ public class PlayFragment extends Fragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        answerSheet = new AnswerSheet();
-
         imageButton = view.findViewById(R.id.imageView);
         textView = view.findViewById(R.id.playFlag_test_TextView);
         test_tmp = new StringBuilder();
@@ -105,8 +103,8 @@ public class PlayFragment extends Fragment
                 if(pitchHz != -1 && res.getProbability() > 0.99)
                 {
 
-                    answerSheet.addPitch(pitchHz);
-                    answerSheet.addTimes(e.getTimeStamp());
+//                    answerSheet.addPitch(pitchHz);
+//                    answerSheet.addTimes(e.getTimeStamp());
 
                     test_tmp.append("< ").append(" : ").append(answerSheet.getPitches().get(i)).append(", ").append(answerSheet.getTimeStamps().get(i)).append(" >").append("\n");
 
@@ -130,7 +128,6 @@ public class PlayFragment extends Fragment
 
         Thread pitchThread = new Thread(audioDispatcher, "Pitch Detection Thread");
         pitchThread.start();
-
     }
 
     @Override

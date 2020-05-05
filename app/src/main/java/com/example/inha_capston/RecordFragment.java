@@ -135,7 +135,7 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
         // TODO : implement network interface and transport to server
 
         AnswerSheetMaker answerSheetMaker = new AnswerSheetMaker(mContext, getAbsolutePath(mContext, data.getData()));
-        AnswerSheet answerSheet = answerSheetMaker.getAnswerSheet();
+        AnswerSheet answerSheet = answerSheetMaker.makeAnswerSheet();
     }
 
     /**
@@ -260,6 +260,7 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+
 
     /**
      * Self Check Device External Access

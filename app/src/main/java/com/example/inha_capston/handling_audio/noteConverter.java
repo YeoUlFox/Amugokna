@@ -22,10 +22,11 @@ public class noteConverter
     public String getNoteName(double freq)
     {
         double h = round(12 * log2(freq / C0));
-        double octave = round(h / 12);
+        long octave = round(h / 12);
         int n =  (int) h % 12;  // element number of array(note Name)
 
-        return (noteName[n] + Double.toString(octave));
+        // TODO : change return value String to encoded Integer
+        return (noteName[n] + octave);
     }
 
     /**
