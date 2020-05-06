@@ -1,8 +1,11 @@
 package com.example.inha_capston.handling_audio;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.media.MediaMetadataRetriever;
 import android.util.Log;
+import android.widget.EditText;
 
 import com.arthenica.mobileffmpeg.Config;
 import com.arthenica.mobileffmpeg.FFmpeg;
@@ -252,7 +255,6 @@ public class AnswerSheetMaker
         try {
             FileInputStream fileInputStream = new FileInputStream(file); // TODO : check file input Stream is needed to close
             audioDispatcher = new AudioDispatcher(new UniversalAudioInputStream(fileInputStream, tarsosDSPAudioFormat), 1024, 0);
-            fileInputStream.close();
         } catch (IOException e) {
             Log.i(TAG, "file not found error 'ffmpeg out file' : " + e.getMessage());
             return false;

@@ -15,9 +15,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +35,11 @@ import androidx.navigation.Navigation;
 
 import com.example.inha_capston.handling_audio.AnswerSheet;
 import com.example.inha_capston.handling_audio.AnswerSheetMaker;
+import com.example.inha_capston.utility_class.LocalFileHandler;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 /**
@@ -136,6 +144,53 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
 
         AnswerSheetMaker answerSheetMaker = new AnswerSheetMaker(mContext, getAbsolutePath(mContext, data.getData()));
         AnswerSheet answerSheet = answerSheetMaker.makeAnswerSheet();
+
+        if(answerSheet == null) {
+            Toast.makeText(mContext, "파일을 불러오는 동안 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "make answer sheet return null");
+            return;
+        }
+
+        if(inputFilename_saveLocal(answerSheet)) {
+            // fragment transition
+            navController.navigate(R.id.action_recordFragment_to_audioListFragment);
+        }
+    }
+
+    private boolean inputFilename_saveLocal(final AnswerSheet answerSheet)
+    {
+        /*
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("입력해주세요");
+
+        // Set up the input
+        final EditText input = new EditText(mContext);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Summit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                answerSheet.setFileName(input.getText().toString());
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+         */
+
+        if(answerSheet.getFileName() == null) {
+            answerSheet.setFileName("untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date()));
+        }
+
+        return new LocalFileHandler(mContext, answerSheet.getFileName()).saveAnswerSheet(answerSheet);
     }
 
     /**

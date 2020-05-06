@@ -1,5 +1,7 @@
 package com.example.inha_capston;
 
+import android.app.Activity;
+import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
@@ -47,14 +49,25 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     private Handler seekbarHandler;
     private Runnable updateSeekbar;
 
+    // Context
+    private Context mContext;
+    private Activity mActivity;
+
     public AudioListFragment() {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_audio_list, container, false);
     }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        mContext = context;
+        mActivity = (Activity) context;
+    }
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -110,7 +123,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         });
 
         // file path setting
-        String path = getActivity().getExternalFilesDir("/").getAbsolutePath();
+        String path = mContext.getFilesDir().getAbsolutePath();
         File directory = new File(path);
         audioFiles = directory.listFiles();
 
@@ -250,6 +263,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                 seekbarHandler.postDelayed(this, 500);
             }
         };
+        updateSeekbar.run();
     }
 
     @Override
