@@ -36,10 +36,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
         android:fontFamily="casual"
         android:text="TextView"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@+id/single_list_play_image"
         app:layout_constraintStart_toEndOf="@+id/single_list_play_image" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

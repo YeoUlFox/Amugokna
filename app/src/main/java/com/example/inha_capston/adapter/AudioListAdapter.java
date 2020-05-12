@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.inha_capston.R;
+import com.example.inha_capston.handling_audio.AnswerSheet;
+import com.example.inha_capston.utility_class.LocalFileHandler;
 import com.example.inha_capston.utility_class.TimeAgo;
 
 import java.io.File;
@@ -56,12 +58,18 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             list_title = itemView.findViewById(R.id.single_list_filename_textView);
             list_date = itemView.findViewById(R.id.single_list_date_textView);
 
+            list_image.setOnClickListener(this);
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            onItemListClick.onClickListener(audioFiles[getAdapterPosition()], getAdapterPosition());
+            if (v instanceof ImageView)
+                // fragment transition
+                onItemListClick.onPlayClickListener(audioFiles[getAdapterPosition()], getAdapterPosition());
+            else
+                //
+                onItemListClick.onItemClickListener(audioFiles[getAdapterPosition()], getAdapterPosition());
         }
     }
 
@@ -69,6 +77,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
      * interface for making to use parameter file with click
      */
     public interface  onItemListClick {
-        void  onClickListener(File file, int position);
+        void  onItemClickListener(File file, int position);
+        void  onPlayClickListener(File file, int position);
     }
 }

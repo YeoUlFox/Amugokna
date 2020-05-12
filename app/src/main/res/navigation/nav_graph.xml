@@ -26,10 +26,23 @@
         android:id="@+id/audioListFragment"
         android:name="com.example.inha_capston.AudioListFragment"
         android:label="fragment_audio_list"
-        tools:layout="@layout/fragment_audio_list" />
+        tools:layout="@layout/fragment_audio_list">
+        <action
+            android:id="@+id/action_audioListFragment_to_playFragment"
+            app:destination="@id/playFragment"
+            app:exitAnim="@anim/slide_in"
+            app:enterAnim="@anim/fade_out"/>
+    </fragment>
+
     <fragment
         android:id="@+id/playFragment"
         android:name="com.example.inha_capston.PlayFragment"
         android:label="fragment_play"
-        tools:layout="@layout/fragment_play" />
+        tools:layout="@layout/fragment_play" >
+        <action
+            android:id="@+id/action_playFragment_to_audioListFragment"
+            app:destination="@id/audioListFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/slide_in"/>
+    </fragment>
 </navigation>

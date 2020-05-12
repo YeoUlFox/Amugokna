@@ -8,36 +8,55 @@
 
     <!-- TODO: Update blank fragment layout -->
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintTop_toTopOf="parent"
+    <ImageView
+        android:id="@+id/PlayFragment_playBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:src="@drawable/ic_mic_none"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+    <TextView
+        android:id="@+id/PlayFragment_music_name_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="32sp"
+        android:fontFamily="casual"
+        android:text="곡 이름"
+        android:textAlignment="center"
+        app:layout_constraintTop_toBottomOf="@id/PlayFragment_playBtn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+         />
 
-            <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="20dp"
-                android:src="@drawable/ic_mic_none" />
+    <TextView
+        android:id="@+id/PlayFragment_test_TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="casual"
+        android:text="..."
+        android:textAlignment="center"
+        android:textSize="32sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/PlayFragment_music_name_textView" />
 
-            <TextView
-                android:id="@+id/playFlag_test_TextView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:fontFamily="casual"
-                android:text="@string/hello_blank_fragment"
-                android:textAlignment="center" />
-        </LinearLayout>
-
-    </ScrollView>
+    <SeekBar
+        android:id="@+id/PlayFragment_ScoreSeekBar"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:max="10"
+        android:progress="3"
+        app:layout_constraintTop_toBottomOf="@id/PlayFragment_test_TextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
 
 
 

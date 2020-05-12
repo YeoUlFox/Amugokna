@@ -86,11 +86,25 @@ public class AnswerSheetMaker
 
         // detection start
         isDetectSuccess = detectPitch(mContext, filePath);
+        printResultLog();
 
         if(isDetectSuccess) {
             trimAnswerSheet();
+            printResultLog();
         }
     }
+
+    /**
+     * for debugging
+     */
+    private void printResultLog()
+    {
+        Log.i(TAG, "print test");
+        for(int i = 0; i < pitches.size(); i++) {
+            Log.i(TAG, "< " + pitches.get(i) + ", " + timeStamps.get(i) + " >");
+        }
+    }
+
 
     /**
      * handle redundant pitches and noisy pitches
@@ -101,7 +115,7 @@ public class AnswerSheetMaker
         String pos0_note, pos1_note;
         double pos0_time, pos1_time;
 
-        final int MUL_UNIT = 5;         // multiply with term unit
+        final int MUL_UNIT = 3;         // multiply with term unit
 
         for(int pos = 0; pos < length;)
         {

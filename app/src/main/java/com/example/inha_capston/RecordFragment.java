@@ -186,7 +186,8 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
         builder.show();
          */
 
-        if(answerSheet.getFileName() == null) {
+        // when music metadata(title) is null
+        if(answerSheet.getMetaTitle() == null || answerSheet.getFileName() == null) {
             answerSheet.setFileName("untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date()));
         }
 

@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,8 +21,11 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.inha_capston.adapter.AudioListAdapter;
+import com.example.inha_capston.handling_audio.AnswerSheet;
+import com.example.inha_capston.utility_class.LocalFileHandler;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
@@ -28,22 +33,23 @@ import java.io.IOException;
 
 public class AudioListFragment extends Fragment implements AudioListAdapter.onItemListClick {
 
-    private ConstraintLayout playerSheet;
+    private String TAG = "AudioListFragment";
     private BottomSheetBehavior bottomSheetBehavior;
-    private RecyclerView audioList_recyclerView;
-    private AudioListAdapter audioListAdapter;
 
-    private File[] audioFiles;
+    // for transition
+    private NavController navController;
 
     // media variable
     private MediaPlayer mediaPlayer = null;
     private boolean isPlaying = false;
     private File file_to_Play;
+    private AnswerSheet CurrentAnswerSheet;
 
     // UI from Bottom Sheet
     private ImageButton player_playBtn;
     private TextView playerHeader_textView;
     private TextView playerFilename_textView;
+
     // seek bar handling
     private SeekBar player_seekbar;
     private Handler seekbarHandler;
@@ -72,9 +78,11 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        navController = Navigation.findNavController(view);
+
         // UI
-        audioList_recyclerView = view.findViewById(R.id.audio_list_view);
-        playerSheet = view.findViewById(R.id.player_sheet_Layout);
+        RecyclerView audioList_recyclerView = view.findViewById(R.id.audio_list_view);
+        ConstraintLayout playerSheet = view.findViewById(R.id.player_sheet_Layout);
         bottomSheetBehavior = BottomSheetBehavior.from(playerSheet);
 
         // UI from bottom playerSheet
@@ -95,7 +103,6 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                         // TODO : check music is over and restart music
                         resumeAudio();
                     }
-
                 }
             }
         });
@@ -122,17 +129,6 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
             }
         });
 
-        // file path setting
-        String path = mContext.getFilesDir().getAbsolutePath();
-        File directory = new File(path);
-        audioFiles = directory.listFiles();
-
-        // adapter and list View setting
-        audioListAdapter = new AudioListAdapter(audioFiles, this);
-        audioList_recyclerView.setHasFixedSize(true);
-        audioList_recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        audioList_recyclerView.setAdapter(audioListAdapter);
-
         bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback()
         {
             @Override
@@ -147,12 +143,69 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                 // nothing to do in this callback function
             }
         });
+
+        // file path setting
+        String path = mContext.getFilesDir().getAbsolutePath();
+        File directory = new File(path);
+        File[] audioFiles = directory.listFiles();
+
+        // adapter and list View setting
+        AudioListAdapter audioListAdapter = new AudioListAdapter(audioFiles, this);
+        audioList_recyclerView.setHasFixedSize(true);
+        audioList_recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        audioList_recyclerView.setAdapter(audioListAdapter);
+
+
     }
 
     @Override
-    public void onClickListener(File file, int position) {
-        file_to_Play = file;
+    public void onPlayClickListener(File file, int position) {
+        // for file data extract
+        LocalFileHandler localFileHandler = new LocalFileHandler(mContext, file.getName());
+        CurrentAnswerSheet = localFileHandler.loadAnswerSheet();
 
+        // file not found exception
+        if(CurrentAnswerSheet == null)
+        {
+            Toast.makeText(mContext, "해당 파일에 문제가 생겼습니다.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // send object
+        Bundle argument = new Bundle();
+        argument.putSerializable("ANSWER_SHEET", CurrentAnswerSheet);
+
+        navController.navigate(R.id.action_audioListFragment_to_playFragment, argument);
+    }
+
+    @Override
+    public void onItemClickListener(File file, int position) {
+        // for file data extract
+        LocalFileHandler localFileHandler = new LocalFileHandler(mContext, file.getName());
+        AnswerSheet loadedAnswerSheet = localFileHandler.loadAnswerSheet();
+
+        // file not found exception
+        if(loadedAnswerSheet == null)
+        {
+            Toast.makeText(mContext, "해당 파일에 문제가 생겼습니다.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if(CurrentAnswerSheet == null)
+            CurrentAnswerSheet = loadedAnswerSheet;
+        else {
+            if(!loadedAnswerSheet.getFileName().equals(CurrentAnswerSheet.getFileName())) {
+                CurrentAnswerSheet = loadedAnswerSheet;
+            }
+            else {
+                // if same item clicked
+                return;
+            }
+        }
+
+        file_to_Play = new File(CurrentAnswerSheet.getFilePath());
+
+        // play music preview
         if(isPlaying)
         {
             stopAudio();
