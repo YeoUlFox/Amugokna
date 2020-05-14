@@ -13,8 +13,11 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import android.os.Handler;
+import android.os.SystemClock;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.inha_capston.handling_audio.AnswerSheet;
+import com.example.inha_capston.handling_audio.Scoring;
 import com.example.inha_capston.handling_audio.noteConverter;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
@@ -46,6 +50,8 @@ import be.tarsos.dsp.pitch.PitchProcessor;
  */
 public class PlayFragment extends Fragment
 {
+    static final String TAG = "playFragment";
+
     // context
     private Context mContext;       // getContext()
     private Activity mActivity;     // getActivity()
@@ -62,6 +68,10 @@ public class PlayFragment extends Fragment
     private MediaPlayer mediaPlayer;
     private AudioDispatcher audioDispatcher;
     private Thread pitchThread;
+
+    // scoring
+    private noteConverter noteConverter;
+    private Scoring scoring;
 
     // flags
     private boolean isPlaying = false;
@@ -80,6 +90,10 @@ public class PlayFragment extends Fragment
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        navController = Navigation.findNavController(view);
+        // for handling pitch detection result
+        noteConverter = new noteConverter();
+
         PlayButton = view.findViewById(R.id.PlayFragment_playBtn);
         musicName_textView = view.findViewById(R.id.PlayFragment_music_name_textView);
         detectionResult_textView = view.findViewById(R.id.PlayFragment_test_TextView);
@@ -102,11 +116,14 @@ public class PlayFragment extends Fragment
             }
         });
 
-        // AnswerSheet Load
-        answerSheet = (AnswerSheet)savedInstanceState.getSerializable("ANSWER_SHEET");
+        // AnswerSheet and scoring class init Load
+        answerSheet = (AnswerSheet)getArguments().getSerializable("ANSWER_SHEET");
+        scoring = new Scoring(answerSheet);
+
         if(answerSheet == null) {
             Toast.makeText(mContext, "파일을 불러오는 도중 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
             navController.navigate(R.id.action_playFragment_to_audioListFragment);
+            return;
         }
 
         AudioSetting();
@@ -143,12 +160,28 @@ public class PlayFragment extends Fragment
             public void handlePitch(PitchDetectionResult res, AudioEvent e)
             {
                 final float pitchHz = res.getPitch();
-                if(pitchHz != -1 && res.getProbability() > 0.99)
+                if(pitchHz != -1 && res.getProbability() > 0.95)
                 {
-                    // TODO :
+                    Log.e(TAG, noteConverter.getNoteName(pitchHz) + " " + e.getTimeStamp());
+                    scoring.calScore(noteConverter.getNoteName(pitchHz), e.getTimeStamp());
+
+                    // show realtime result
+                    mActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            detectionResult_textView.setText(noteConverter.getNoteName(pitchHz));
+                            // result_seekbar.setProgress(); TODO: seekbar handling
+                        }
+                    });
                 }
             }
         };
+
+        if (!checkPermissions()) {
+            Toast.makeText(mContext, "마이크 사용을 허가 해주세요", Toast.LENGTH_LONG).show();
+            navController.navigate(R.id.action_playFragment_to_audioListFragment);
+            return;
+        }
 
         audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050,1024, 0);
         AudioProcessor pitchProcessor = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, 22050,1024, pitchDetectionHandler);
@@ -173,36 +206,47 @@ public class PlayFragment extends Fragment
             @Override
             public void onCompletion(MediaPlayer mp) {
                 // TODO : show result
+                stopRecord();
+                mActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        detectionResult_textView.setText(scoring.getResult() + "");
+                    }
+                });
             }
         });
     }
 
     /**
      *  make record thread
+     *  + make scoring
      */
     private void recordAudio() {
         if(audioDispatcher == null) {
             Toast.makeText(mContext, "오디오 프로세스간의 문제가 발생하였습니다.", Toast.LENGTH_LONG).show();
             return;
         }
-
         pitchThread = new Thread(audioDispatcher, "game start");
-        if (checkPermissions()) pitchThread.start();
+        scoring.setRecordStartTime(SystemClock.elapsedRealtime());
+        Log.i(TAG, "recordMusicTime" + SystemClock.elapsedRealtime());
+        pitchThread.start();
     }
 
     /**
      * interrupt thread and make null
      */
     private void stopRecord() {
-        if(pitchThread.isAlive())
-            pitchThread.interrupt();
-        pitchThread = null;
+        if(audioDispatcher != null)
+            audioDispatcher.stop();
+        audioDispatcher = null;
     }
 
     /**
      *  play music
      */
     private void playAudio() {
+        scoring.setMusicStartTime(SystemClock.elapsedRealtime());
+        Log.i(TAG, "startMusicTime" + SystemClock.elapsedRealtime());
         mediaPlayer.start();
     }
 

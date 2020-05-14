@@ -115,14 +115,14 @@ public class AnswerSheetMaker
         String pos0_note, pos1_note;
         double pos0_time, pos1_time;
 
-        final int MUL_UNIT = 3;         // multiply with term unit
+        final int MUL_UNIT = 2;         // multiply with term unit
 
         for(int pos = 0; pos < length;)
         {
             pos0_note = pitches.get(pos);
             pos0_time = timeStamps.get(pos);
 
-            if(pos + 1 < length)
+            if(pos < length)
             {
                 pos1_note = pitches.get(pos + 1);
                 pos1_time = timeStamps.get(pos + 1);
@@ -140,7 +140,7 @@ public class AnswerSheetMaker
                     else
                     {
                         // check continuous note
-                        for(;pos + 1 < length;) {
+                        for(;pos + 2 < length;) {
                             pos++;
                             pos0_note = pos1_note;
                             pos0_time = pos1_time;
@@ -157,6 +157,8 @@ public class AnswerSheetMaker
                                 break;
                             }
                         }
+
+                        pos += 2;
                     }
                 }
                 else
@@ -190,7 +192,7 @@ public class AnswerSheetMaker
                     pos1++;
 
                     if(pitches.get(pos1) != null) {
-                        if(timeStamps.get(pos1) - timeStamps.get(pos0) >  UNIT_TERM * 3) {
+                        if(timeStamps.get(pos1) - timeStamps.get(pos0) >  0) {
                             tmp_pitches.add(pitches.get(pos0));
                             tmp_timeStamps.add(timeStamps.get(pos0));
                             tmp_pitches.add(pitches.get(pos1));

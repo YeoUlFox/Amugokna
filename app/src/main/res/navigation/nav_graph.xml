@@ -43,6 +43,11 @@
             android:id="@+id/action_playFragment_to_audioListFragment"
             app:destination="@id/audioListFragment"
             app:exitAnim="@anim/fade_out"
-            app:enterAnim="@anim/slide_in"/>
+            app:enterAnim="@anim/slide_in">
+            <argument
+                android:name="args_answersheet"
+                app:argType="com.example.inha_capston.handling_audio.AnswerSheet" />
+        </action>
+
     </fragment>
 </navigation>

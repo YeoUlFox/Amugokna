@@ -29,6 +29,12 @@ public class noteConverter
         return (noteName[n] + octave);
     }
 
+    public int getNoteGap(String n1, String n2) {
+
+
+        return 0;
+    }
+
     /**
      * log based 2 function for java
      * @param x input number
