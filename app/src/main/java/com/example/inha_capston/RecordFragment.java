@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -58,7 +59,6 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
 
     // UIs
     private NavController navController;
-    private TextView filename_textView;
 
     public RecordFragment() {
         // Required empty public constructor
@@ -75,13 +75,14 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
-        filename_textView = view.findViewById(R.id.record_filename);
 
-        ImageButton loadBtn = view.findViewById(R.id.load_btn);
-        ImageButton recordBtn = view.findViewById(R.id.record_btn);
+        Button loadBtn = view.findViewById(R.id.load_btn);
+        Button recordBtn = view.findViewById(R.id.record_btn);
+        Button OptionsBtn = view.findViewById(R.id.setting_btn);
 
         recordBtn.setOnClickListener(this);
         loadBtn.setOnClickListener(this);
+        OptionsBtn.setOnClickListener(this);
     }
 
     @Override
@@ -93,6 +94,9 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
             case R.id.record_btn:
                 // transition fragment with anim, show list of audio record files
                 navController.navigate(R.id.action_recordFragment_to_audioListFragment);
+                break;
+            case R.id.setting_btn:
+                // TODO : add option fragment
                 break;
         }
     }

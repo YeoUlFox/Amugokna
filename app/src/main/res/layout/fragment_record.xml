@@ -6,75 +6,58 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".RecordFragment">
 
-    <ProgressBar
-        android:id="@+id/record_freqency_textView"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="96dp" />
-
-    <TextView
-        android:id="@+id/record_filename"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="casual"
-        android:textSize="36sp"
-        android:textAlignment="center"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:lineHeight="32dp"
-        android:text="Press the mic button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/record_freqency_textView"
-        android:layout_marginTop="64dp"
-        android:gravity="center_horizontal" />
-    
-    <Chronometer
-        android:id="@+id/record_timer"
-        app:layout_constraintTop_toBottomOf="@id/record_filename"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="64dp"
-        android:fontFamily="casual"
-        android:textSize="64dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <ImageButton
+    <Button
         android:id="@+id/record_btn"
-        android:background="@android:color/white"
-        app:layout_constraintTop_toBottomOf="@id/record_timer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/load_btn"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:srcCompat="@drawable/ic_record_mic_96dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <ImageButton
-        android:id="@+id/load_btn"
-        android:layout_width="wrap_content"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        app:srcCompat="@drawable/ic_load_file_96dp"
+        android:text="@string/main_frag_sing_btn"
+        android:textSize="20sp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        app:icon="@drawable/ic_library_music_24px"
+        app:iconGravity="start"
+        app:iconSize="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/record_list_btn"
-        app:layout_constraintStart_toEndOf="@id/record_btn"
-        app:layout_constraintTop_toBottomOf="@+id/record_timer" />
-
-    <ImageButton
-        android:id="@+id/record_list_btn"
-        android:background="@android:color/white"
-        app:layout_constraintTop_toTopOf="@id/load_btn"
-        app:layout_constraintStart_toEndOf="@id/load_btn"
-        app:layout_constraintBottom_toBottomOf="@id/load_btn"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_record_list_24dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.33" />
+
+    <Button
+        android:id="@+id/load_btn"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/main_frag_load_music_btn"
+        android:textSize="20sp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        app:icon="@drawable/ic_create_new_folder_24px"
+        app:iconGravity="start"
+        app:iconSize="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/record_btn"
+        app:layout_constraintStart_toStartOf="@+id/record_btn"
+        app:layout_constraintTop_toBottomOf="@+id/record_btn"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/setting_btn"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/main_frag_options_btn"
+        android:textSize="20sp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        app:icon="@drawable/ic_settings_applications_24px"
+        app:iconGravity="start"
+        app:iconSize="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/load_btn"
+        app:layout_constraintStart_toStartOf="@+id/load_btn"
+        app:layout_constraintTop_toBottomOf="@+id/load_btn"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
