@@ -11,7 +11,7 @@ import java.util.ArrayList;
  */
 public class AnswerSheet implements Serializable
 {
-    private ArrayList<String> pitches;
+    private ArrayList<Integer> pitches;
     private ArrayList<Double> timeStamps;
 
     // music data
@@ -24,7 +24,7 @@ public class AnswerSheet implements Serializable
     private int maxAccuracy; // TODO :
     private char rank;
 
-    public AnswerSheet(ArrayList<String> pitches, ArrayList<Double> timeStamps)
+    public AnswerSheet(ArrayList<Integer> pitches, ArrayList<Double> timeStamps)
     {
         this.pitches = pitches;
         this.timeStamps = timeStamps;
@@ -43,8 +43,8 @@ public class AnswerSheet implements Serializable
     public String getFilePath() { return filePath; }
 
     public void setTimeStamps(ArrayList<Double> timeStamps) { this.timeStamps = timeStamps; }
-    public void setPitches(ArrayList<String> pitches) { this.pitches = pitches; }
-    public ArrayList<String> getPitches() {
+    public void setPitches(ArrayList<Integer> pitches) { this.pitches = pitches; }
+    public ArrayList<Integer> getPitches() {
         return pitches;
     }
     public ArrayList<Double> getTimeStamps() { return timeStamps; }

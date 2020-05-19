@@ -17,7 +17,34 @@ public class noteConverter
      * get String Note name from frequency
      * reference https://www.johndcook.com/blog/2016/02/10/musical-pitch-notation/
      * @param freq frequency of input
-     * @return String of musical note name
+     * @return integer of musical note name
+     */
+    public int getNoteNum(double freq)
+    {
+        double h = round(12 * log2(freq / C0));
+        long octave = round(h / 12);
+        int n =  (int) h % 12;  // element number of array(note Name)
+
+        return (n * 10 + (int) octave);
+    }
+
+    /**
+     * note number to String
+     * @param num note number
+     */
+    public String getNoteStringfromInt(int num)
+    {
+        if(num > 119)
+            // invalid noteNumber
+            return null;
+
+        return noteName[num / 10] + (num % 10);
+    }
+
+    /**
+     * get String Note name from frequency
+     * @param freq frequency of input
+     * @return integer of musical note name
      */
     public String getNoteName(double freq)
     {
@@ -25,14 +52,7 @@ public class noteConverter
         long octave = round(h / 12);
         int n =  (int) h % 12;  // element number of array(note Name)
 
-        // TODO : change return value String to encoded Integer
-        return (noteName[n] + octave);
-    }
-
-    public int getNoteGap(String n1, String n2) {
-
-
-        return 0;
+        return noteName[n] + octave;
     }
 
     /**

@@ -18,7 +18,7 @@ public class Scoring {
     private AnswerSheet answerSheet;
 
     private int listPtr;
-    private String[] pitches;
+    private Integer[] pitches;
     private Double[] timeStamps;
     private Long[] needs;       // how many detection result inputs to make it correct
     private Long[] actualScore; // correct count
@@ -35,7 +35,7 @@ public class Scoring {
         listPtr = 0;
 
         this.answerSheet = answerSheet;
-        this.pitches = answerSheet.getPitches().toArray(new String[0]);
+        this.pitches = answerSheet.getPitches().toArray(new Integer[0]);
         this.timeStamps = answerSheet.getTimeStamps().toArray(new Double[0]);
 
         // for result
@@ -60,16 +60,16 @@ public class Scoring {
 
     /**
      *
-     * @param ip_note recorded note String
+     * @param ip_note recorded note int
      * @param ip_timeStamp recorded time Stamp
      */
-    public void calScore(String ip_note, Double ip_timeStamp) {
+    public void calScore(int ip_note, Double ip_timeStamp) {
         // check timestamps
         for(;listPtr < timeStamps.length;) {
             if (ip_timeStamp < timeStamps[listPtr] + 1) return;
             else if(timeStamps[listPtr] - 1 < ip_timeStamp && ip_timeStamp < timeStamps[listPtr + 1] + 1) {
                 Log.i(TAG,  ip_note +  " vs " + pitches[listPtr]);
-                if(ip_note.equals(pitches[listPtr])) {
+                if(ip_note  == pitches[listPtr]) {
                     // correct note
                     actualScore[listPtr / 2] = Math.min(actualScore[listPtr / 2] + 1, needs[listPtr / 2]);
                 }

@@ -43,15 +43,13 @@ public class AnswerSheetMaker
     private AudioDispatcher audioDispatcher;
 
     // variable to make answer Sheet
-    private ArrayList<String> pitches;
+    private ArrayList<Integer> pitches;
     private ArrayList<Double> timeStamps;
     private noteConverter converter;
 
     // for metaData and music file info
     private MediaMetadataRetriever metadataRetriever;
     private String filePath;
-
-    private static final double UNIT_TERM = 0.0808;     // used by trimming
 
     /**
      * constructor init variable and call pitch detection func
@@ -78,18 +76,26 @@ public class AnswerSheetMaker
             public void handlePitch(PitchDetectionResult res, AudioEvent e) {
                 final float pitchHz = res.getPitch();
                 if (res.isPitched() && pitchHz != -1 && res.getProbability() > 0.95) {
-                    pitches.add(converter.getNoteName(pitchHz));
+                    pitches.add(converter.getNoteNum(pitchHz));
                     timeStamps.add(e.getTimeStamp());
                 }
             }
         };
 
         // detection start
-        isDetectSuccess = detectPitch(mContext, filePath);
+        isDetectSuccess = detectPitchfromFile(mContext, filePath);
         printResultLog();
 
         if(isDetectSuccess) {
-            trimAnswerSheet();
+            trimAnswerSheet(3.0);
+            removeNull_sNotes(0.0);
+            printResultLog();
+
+            trimAnswerSheet(2.0);
+            removeNull_sNotes(0.05);
+            printResultLog();
+
+            extendTimeStamp(2.0, 1.0);
             printResultLog();
         }
     }
@@ -108,30 +114,31 @@ public class AnswerSheetMaker
 
     /**
      * handle redundant pitches and noisy pitches
+     * @param minTerm multiply with term unit defined minimum term of each notes
      */
-    private void trimAnswerSheet()
+    private void trimAnswerSheet(double minTerm)
     {
         int length = pitches.size();
-        String pos0_note, pos1_note;
-        double pos0_time, pos1_time;
+        if(length == 0) return;
 
-        final int MUL_UNIT = 2;         // multiply with term unit
+        int pos0_note, pos1_note;
+        double pos0_time, pos1_time;
 
         for(int pos = 0; pos < length;)
         {
             pos0_note = pitches.get(pos);
             pos0_time = timeStamps.get(pos);
 
-            if(pos < length)
+            if(pos + 1 < length)
             {
                 pos1_note = pitches.get(pos + 1);
                 pos1_time = timeStamps.get(pos + 1);
 
                 // check equal note
-                if(pos0_note.equals(pos1_note))
+                if(pos0_note == pos1_note)
                 {
                     // check term with pos1 (long check)
-                    if (pos1_time - pos0_time > UNIT_TERM * MUL_UNIT)
+                    if (pos1_time - pos0_time > minTerm)
                     {
                         pitches.set(pos, null);
                         timeStamps.set(pos, null);
@@ -141,24 +148,24 @@ public class AnswerSheetMaker
                     {
                         // check continuous note
                         for(;pos + 2 < length;) {
-                            pos++;
                             pos0_note = pos1_note;
                             pos0_time = pos1_time;
-                            pos1_note = pitches.get(pos + 1);
-                            pos1_time = timeStamps.get(pos + 1);
+                            pos1_note = pitches.get(pos + 2);
+                            pos1_time = timeStamps.get(pos + 2);
 
-                            if (pos0_note.equals(pos1_note) && pos1_time - pos0_time < UNIT_TERM * MUL_UNIT) {
-                                pitches.set(pos, null);
-                                timeStamps.set(pos, null);
+                            if (pos0_note == pos1_note && pos1_time - pos0_time <= minTerm) {
+                                pitches.set(pos + 1, null);
+                                timeStamps.set(pos + 1, null);
+                                pos++;
                             }
                             else {
                                 // F - F - G or F - F -------- F
-                                pos++;
+                                pos += 2;
                                 break;
                             }
-                        }
+                        } // end 2nd for loop
 
-                        pos += 2;
+                        if(pos + 2 >= length) break;
                     }
                 }
                 else
@@ -176,11 +183,21 @@ public class AnswerSheetMaker
                 pitches.set(pos, null);
                 timeStamps.set(pos, null);
                 pos++;
-            }
+            } // if last note
         }
+    }
 
+    /**
+     * remove Null and validate short term note
+     * @param minTerm minimum term time
+     */
+    private void removeNull_sNotes(double minTerm)
+    {
         // remove null element and short term noisy
-        ArrayList<String> tmp_pitches = new ArrayList<>();
+        int length = pitches.size();
+        if(length == 0) return;
+
+        ArrayList<Integer> tmp_pitches = new ArrayList<>();
         ArrayList<Double> tmp_timeStamps = new ArrayList<>();
 
         for(int pos0 = 0; pos0 < length;)
@@ -192,7 +209,7 @@ public class AnswerSheetMaker
                     pos1++;
 
                     if(pitches.get(pos1) != null) {
-                        if(timeStamps.get(pos1) - timeStamps.get(pos0) >  0) {
+                        if(timeStamps.get(pos1) - timeStamps.get(pos0) >  minTerm) {
                             tmp_pitches.add(pitches.get(pos0));
                             tmp_timeStamps.add(timeStamps.get(pos0));
                             tmp_pitches.add(pitches.get(pos1));
@@ -212,6 +229,33 @@ public class AnswerSheetMaker
         // replace first arrayList
         pitches = tmp_pitches;
         timeStamps = tmp_timeStamps;
+    }
+
+    /**
+     * fill timeStamp term in answer sheet for scoring
+     * @param minTerm minimum Term
+     * @param maxTerm maximum interval extended by function
+     */
+    private void extendTimeStamp(double minTerm, double maxTerm)
+    {
+        int length = timeStamps.size();
+        if(length == 0 || minTerm < maxTerm * 2) return;
+
+        // first note time stamp is not extended
+        double interval;
+        for(int pos = 1; pos + 1 < length; pos += 2)
+        {
+            interval = timeStamps.get(pos + 1) - timeStamps.get(pos);
+
+            if(interval < minTerm) {
+                timeStamps.set(pos, timeStamps.get(pos) + interval / 2);
+                timeStamps.set(pos + 1, timeStamps.get(pos + 1) - interval / 2);
+            }
+            else {
+                timeStamps.set(pos, timeStamps.get(pos) + maxTerm);
+                timeStamps.set(pos + 1, timeStamps.get(pos + 1) - maxTerm);
+            }
+        }
     }
 
     /**
@@ -245,7 +289,7 @@ public class AnswerSheetMaker
      * @param path
      * @return success : true, else false
      */
-    private boolean detectPitch(Context mContext, String path)
+    private boolean detectPitchfromFile(Context mContext, String path)
     {
         File audioFile = new File(path);
         filePath = audioFile.getAbsolutePath();

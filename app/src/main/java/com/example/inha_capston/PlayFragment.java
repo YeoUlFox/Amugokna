@@ -163,7 +163,7 @@ public class PlayFragment extends Fragment
                 if(pitchHz != -1 && res.getProbability() > 0.95)
                 {
                     Log.e(TAG, noteConverter.getNoteName(pitchHz) + " " + e.getTimeStamp());
-                    scoring.calScore(noteConverter.getNoteName(pitchHz), e.getTimeStamp());
+                    scoring.calScore(noteConverter.getNoteNum(pitchHz), e.getTimeStamp());
 
                     // show realtime result
                     mActivity.runOnUiThread(new Runnable() {

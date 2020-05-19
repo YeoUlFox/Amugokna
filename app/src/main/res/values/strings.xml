@@ -4,5 +4,5 @@
     <!-- main fragment -->
     <string name="main_frag_sing_btn">Sing a song</string>
     <string name="main_frag_load_music_btn">Load music</string>
-    <string name="main_frag_options_btn">Setting</string>
+    <string name="main_frag_options_btn">Options</string>
 </resources>
