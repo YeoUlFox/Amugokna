@@ -6,30 +6,33 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/single_list_play_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginLeft="32dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
+        android:id="@+id/single_list_play_Btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/ic_play_arrow_24px"
+
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.100"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_play_arrow_black" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/single_list_filename_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
+        android:layout_marginStart="12dp"
         android:fontFamily="casual"
         android:text="TextView"
         android:textSize="15sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/single_list_play_image"
-        app:layout_constraintTop_toTopOf="@+id/single_list_play_image" />
+        app:layout_constraintBottom_toBottomOf="@id/single_list_play_Btn"
+        app:layout_constraintStart_toEndOf="@+id/single_list_play_Btn"
+        app:layout_constraintTop_toTopOf="@+id/single_list_play_Btn"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/single_list_date_textView"
@@ -39,7 +42,9 @@
         android:fontFamily="casual"
         android:text="TextView"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/single_list_play_image"
-        app:layout_constraintStart_toEndOf="@+id/single_list_play_image" />
+        app:layout_constraintTop_toBottomOf="@+id/single_list_filename_textView"
+        app:layout_constraintStart_toStartOf="@+id/single_list_filename_textView"
+        app:layout_constraintEnd_toEndOf="@+id/single_list_filename_textView"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

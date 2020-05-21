@@ -34,6 +34,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -72,6 +73,9 @@ public class PlayFragment extends Fragment
     // scoring
     private noteConverter noteConverter;
     private Scoring scoring;
+    private ArrayList<Integer> scoring_pitchList;
+    private ArrayList<Double> scoring_timeStampList;
+
 
     // flags
     private boolean isPlaying = false;
@@ -109,24 +113,13 @@ public class PlayFragment extends Fragment
                     isPlaying = false;
                 }
                 else {
+                    AudioSetting();
                     playAudio();
                     recordAudio();
                     isPlaying = true;
                 }
             }
         });
-
-        // AnswerSheet and scoring class init Load
-        answerSheet = (AnswerSheet)getArguments().getSerializable("ANSWER_SHEET");
-        scoring = new Scoring(answerSheet);
-
-        if(answerSheet == null) {
-            Toast.makeText(mContext, "파일을 불러오는 도중 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
-            navController.navigate(R.id.action_playFragment_to_audioListFragment);
-            return;
-        }
-
-        AudioSetting();
     }
 
     @Override
@@ -153,6 +146,18 @@ public class PlayFragment extends Fragment
     }
 
     private void AudioSetting() {
+        // AnswerSheet and scoring class init Load
+        answerSheet = (AnswerSheet)getArguments().getSerializable("ANSWER_SHEET");
+        scoring = new Scoring(answerSheet);
+        scoring_pitchList = new ArrayList<>();
+        scoring_timeStampList = new ArrayList<>();
+
+        if(answerSheet == null) {
+            Toast.makeText(mContext, "파일을 불러오는 도중 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
+            navController.navigate(R.id.action_playFragment_to_audioListFragment);
+            return;
+        }
+
         // Record setting
         PitchDetectionHandler pitchDetectionHandler = new PitchDetectionHandler()
         {
@@ -160,16 +165,18 @@ public class PlayFragment extends Fragment
             public void handlePitch(PitchDetectionResult res, AudioEvent e)
             {
                 final float pitchHz = res.getPitch();
+                final double timeStamp = e.getTimeStamp();
                 if(pitchHz != -1 && res.getProbability() > 0.95)
                 {
-                    Log.e(TAG, noteConverter.getNoteName(pitchHz) + " " + e.getTimeStamp());
-                    scoring.calScore(noteConverter.getNoteNum(pitchHz), e.getTimeStamp());
+                    scoring_pitchList.add(noteConverter.getNoteNum(pitchHz));
+                    scoring_timeStampList.add(timeStamp);
 
                     // show realtime result
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             detectionResult_textView.setText(noteConverter.getNoteName(pitchHz));
+                            scoring.getGap(noteConverter.getNoteNum(pitchHz), timeStamp);
                             // result_seekbar.setProgress(); TODO: seekbar handling
                         }
                     });
@@ -210,7 +217,9 @@ public class PlayFragment extends Fragment
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        detectionResult_textView.setText(scoring.getResult() + "");
+                        double result = scoring.getResult(scoring_pitchList, scoring_timeStampList);
+                        Log.e(TAG, result + " ");
+                        detectionResult_textView.setText(String.valueOf(result));
                     }
                 });
             }

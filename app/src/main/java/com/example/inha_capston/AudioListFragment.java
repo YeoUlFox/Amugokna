@@ -34,7 +34,6 @@ import java.io.IOException;
 public class AudioListFragment extends Fragment implements AudioListAdapter.onItemListClick {
 
     private String TAG = "AudioListFragment";
-    private BottomSheetBehavior bottomSheetBehavior;
 
     // for transition
     private NavController navController;
@@ -42,18 +41,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     // media variable
     private MediaPlayer mediaPlayer = null;
     private boolean isPlaying = false;
-    private File file_to_Play;
     private AnswerSheet CurrentAnswerSheet;
-
-    // UI from Bottom Sheet
-    private ImageButton player_playBtn;
-    private TextView playerHeader_textView;
-    private TextView playerFilename_textView;
-
-    // seek bar handling
-    private SeekBar player_seekbar;
-    private Handler seekbarHandler;
-    private Runnable updateSeekbar;
 
     // Context
     private Context mContext;
@@ -82,67 +70,6 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
         // UI
         RecyclerView audioList_recyclerView = view.findViewById(R.id.audio_list_view);
-        ConstraintLayout playerSheet = view.findViewById(R.id.player_sheet_Layout);
-        bottomSheetBehavior = BottomSheetBehavior.from(playerSheet);
-
-        // UI from bottom playerSheet
-        player_playBtn = view.findViewById(R.id.player_play_imageView);
-        playerHeader_textView = view.findViewById(R.id.player_header_status_textView);
-        playerFilename_textView = view.findViewById(R.id.player_filename_textView);
-        player_seekbar = view.findViewById(R.id.player_seekbar);
-
-        player_playBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(isPlaying)
-                    pauseAudio();
-                else
-                {
-                    if(file_to_Play != null)
-                    {
-                        // TODO : check music is over and restart music
-                        resumeAudio();
-                    }
-                }
-            }
-        });
-
-        player_seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // nothing to do
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                if(file_to_Play != null)
-                    pauseAudio();
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                if(file_to_Play != null) {
-                    int progress = seekBar.getProgress();
-                    mediaPlayer.seekTo(progress);
-                    resumeAudio();
-                }
-            }
-        });
-
-        bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback()
-        {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                if(newState == BottomSheetBehavior.STATE_HIDDEN) {
-                    // prevent BottomSheet hidden
-                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                }
-            }
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                // nothing to do in this callback function
-            }
-        });
 
         // file path setting
         String path = mContext.getFilesDir().getAbsolutePath();
@@ -154,8 +81,6 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         audioList_recyclerView.setHasFixedSize(true);
         audioList_recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         audioList_recyclerView.setAdapter(audioListAdapter);
-
-
     }
 
     @Override
@@ -203,7 +128,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
             }
         }
 
-        file_to_Play = new File(CurrentAnswerSheet.getFilePath());
+        File file_to_Play = new File(CurrentAnswerSheet.getFilePath());
 
         // play music preview
         if(isPlaying)
@@ -221,11 +146,8 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     private void pauseAudio()
     {
         // update UIs
-        player_playBtn.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_play_arrow_24dp));
         // update status
         isPlaying = false;
-        seekbarHandler.removeCallbacks(updateSeekbar);
-
         mediaPlayer.pause();
     }
 
@@ -234,14 +156,8 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
      */
     private void resumeAudio()
     {
-        // update UIs
-        player_playBtn.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_pause_black_24dp));
-        updateRunnable();
-        seekbarHandler.postDelayed(updateSeekbar, 500);
-
         // update status
         isPlaying = true;
-
         mediaPlayer.start();
     }
 
@@ -250,14 +166,8 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
      */
     private void stopAudio()
     {
-        // update UIs
-        // TODO : null object error
-        player_playBtn.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_play_arrow_24dp));
-        playerHeader_textView.setText("Stopping");
-
         // update state
         isPlaying = false;
-
         mediaPlayer.stop();
     }
 
@@ -278,13 +188,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         {
             e.printStackTrace();
         }
-        // update UIs
-        player_playBtn.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_pause_black_24dp));
-        playerFilename_textView.setText(file_to_Play.getName());
-        playerHeader_textView.setText("Playing");
 
-        // update state
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         isPlaying = true;
 
         // media player callback (completed)
@@ -292,31 +196,8 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
             @Override
             public void onCompletion(MediaPlayer mp) {
                 stopAudio();
-                playerHeader_textView.setText("finished");
             }
         });
-
-        // Seek bar sync
-        player_seekbar.setMax(mediaPlayer.getDuration());
-        seekbarHandler = new Handler();
-        updateRunnable();
-        seekbarHandler.postDelayed(updateSeekbar, 500);
-    }
-
-    /**
-     * make thread to post runnable object
-     */
-    private void updateRunnable()
-    {
-        updateSeekbar = new Runnable() {
-            @Override
-            public void run()
-            {
-                player_seekbar.setProgress(mediaPlayer.getCurrentPosition());
-                seekbarHandler.postDelayed(this, 500);
-            }
-        };
-        updateSeekbar.run();
     }
 
     @Override

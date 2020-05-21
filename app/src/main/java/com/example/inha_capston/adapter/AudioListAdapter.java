@@ -3,6 +3,7 @@ package com.example.inha_capston.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -54,7 +55,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
 
         public AudioViewHolder(@NonNull View itemView) {
             super(itemView);
-            list_image = itemView.findViewById(R.id.single_list_play_image);
+            list_image = itemView.findViewById(R.id.single_list_play_Btn);
             list_title = itemView.findViewById(R.id.single_list_filename_textView);
             list_date = itemView.findViewById(R.id.single_list_date_textView);
 

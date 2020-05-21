@@ -12,6 +12,4 @@
         android:layout_width="match_parent"
         />
 
-    <include layout="@layout/player_sheet" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
