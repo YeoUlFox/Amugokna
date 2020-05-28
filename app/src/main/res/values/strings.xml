@@ -5,4 +5,17 @@
     <string name="main_frag_sing_btn">Sing a song</string>
     <string name="main_frag_load_music_btn">Load music</string>
     <string name="main_frag_options_btn">Options</string>
+
+    <!-- StringInputFragment -->
+    <string name="input_frag_editText_hint">입력해</string>
+
+    <!-- listFragment, Alert Dialog -->
+    <string name="pick_action">무엇을 할까?</string>
+    <array name="action_array">
+        <item>Rename</item>
+        <item>Delete</item>
+    </array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -15,11 +15,6 @@
             app:destination="@id/audioListFragment"
             app:exitAnim="@anim/fade_out"
             app:enterAnim="@anim/slide_in"/>
-        <action
-            android:id="@+id/action_recordFragment_to_playFragment"
-            app:destination="@id/playFragment"
-            app:exitAnim="@anim/slide_in"
-            app:enterAnim="@anim/fade_out"/>
     </fragment>
 
     <fragment
@@ -48,6 +43,23 @@
                 android:name="args_answersheet"
                 app:argType="com.example.inha_capston.handling_audio.AnswerSheet" />
         </action>
+        <action
+            android:id="@+id/action_playFragment_to_resultFragment"
+            app:destination="@id/resultFragment" />
 
+    </fragment>
+    <fragment
+        android:id="@+id/stringInputFragment"
+        android:name="com.example.inha_capston.StringInputFragment"
+        android:label="fragment_string_input"
+        tools:layout="@layout/fragment_string_input" />
+    <fragment
+        android:id="@+id/resultFragment"
+        android:name="com.example.inha_capston.ResultFragment"
+        android:label="fragment_result"
+        tools:layout="@layout/fragment_result" >
+        <action
+            android:id="@+id/action_resultFragment_to_audioListFragment"
+            app:destination="@id/audioListFragment" />
     </fragment>
 </navigation>

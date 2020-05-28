@@ -1,9 +1,30 @@
 package com.example.inha_capston.handling_audio;
 
+import android.content.Context;
+import android.media.MediaMetadataRetriever;
 import android.util.Log;
 
+import com.arthenica.mobileffmpeg.Config;
+import com.arthenica.mobileffmpeg.FFmpeg;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import be.tarsos.dsp.AudioDispatcher;
+import be.tarsos.dsp.AudioEvent;
+import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.io.TarsosDSPAudioFormat;
+import be.tarsos.dsp.io.UniversalAudioInputStream;
+import be.tarsos.dsp.pitch.PitchDetectionHandler;
+import be.tarsos.dsp.pitch.PitchDetectionResult;
+import be.tarsos.dsp.pitch.PitchProcessor;
+
+import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_CANCEL;
+import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS;
 
 /**
  * class for scoring with answersheet object
@@ -16,6 +37,7 @@ public class Scoring {
     private long recordStartTime;
 
     private AnswerSheet answerSheet;
+    private Context mContext;
 
     private  int  listPtr;
     private Integer[] Answer_pitches;
@@ -29,12 +51,13 @@ public class Scoring {
      * constructor with pre-process (check term and calculate needs of number of input detection result)
      * @param answerSheet answer
      */
-    public Scoring(AnswerSheet answerSheet) {
+    public Scoring(Context mContext, AnswerSheet answerSheet) {
         musicStartTime = 0;
         recordStartTime = 0;
         listPtr = 0;
 
         this.answerSheet = answerSheet;
+        this.mContext = mContext;
         this.Answer_pitches = answerSheet.getPitches().toArray(new Integer[0]);
         this.Answer_timeStamps = answerSheet.getTimeStamps().toArray(new Double[0]);
 
@@ -51,11 +74,68 @@ public class Scoring {
             else
                 needs[i / 2] = tmp_gap;
         }
-
-//        for(int i = 0; i < pitches.length; i++) {
-//            Log.e(TAG, pitches[i] + " " + timeStamps[i]);
-//        }
     }
+
+    /**
+     * find file "out.wav" from local
+     */
+    public void makeScore()
+    {
+        final noteConverter converter = new noteConverter();
+        final ArrayList<Integer> pitches = new ArrayList<>();
+        final ArrayList<Double> timeStamps = new ArrayList<>();
+        AudioDispatcher audioDispatcher;
+
+        File file = new File(mContext.getFilesDir(), "out.wav");    // output
+
+        // audio dsp
+        TarsosDSPAudioFormat tarsosDSPAudioFormat  = new TarsosDSPAudioFormat(TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
+                22050,
+                2 * 8,
+                1,
+                2 * 1,
+                22050,
+                ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder()));
+
+        PitchDetectionHandler pitchDetectionHandler = new PitchDetectionHandler() {
+            @Override
+            public void handlePitch(PitchDetectionResult res, AudioEvent e) {
+                final float pitchHz = res.getPitch();
+                if (res.isPitched() && pitchHz != -1 && res.getProbability() > 0.95) {
+                    pitches.add(converter.getNoteNum(pitchHz));
+                    timeStamps.add(e.getTimeStamp());
+                }
+            }
+        };
+
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file); // TODO : check file input Stream is needed to close
+            audioDispatcher = new AudioDispatcher(new UniversalAudioInputStream(fileInputStream, tarsosDSPAudioFormat), 1024, 0);
+        } catch (IOException e) {
+            Log.i(TAG, "file not found error 'recoded out file' : " + e.getMessage());
+            return;
+        }
+
+        AudioProcessor pitchProcessor = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, 22050, 1024, pitchDetectionHandler);
+        audioDispatcher.addAudioProcessor(pitchProcessor);
+
+        // pitch detection with thread
+        try {
+            Thread pitchThread = new Thread(audioDispatcher, "Pitch Detection Thread");
+            pitchThread.start();
+            pitchThread.join();                 // main thread will be waited
+        } catch (InterruptedException e) {
+            // interrupt while pitch detection
+            Log.e(TAG, "Error while detection : " + e.getMessage());
+
+            audioDispatcher.stop();
+            audioDispatcher = null; // release dispatcher
+            return;
+        }
+
+        grading(pitches, timeStamps);
+    }
+
 
     /**
      * return gap of input pitch and answer sheet
@@ -91,7 +171,6 @@ public class Scoring {
         return (note1 / 10 - note2 / 10) + (note1 % 10 - note2 % 10) * 12;
     }
 
-
     /**
      * Compare with answer sheet and scoring
      * @param ip_pitches input pitches list
@@ -114,7 +193,7 @@ public class Scoring {
                 tmp_gap = Math.abs(Cal_interval(pitch, Answer_pitches[temp_ptr]));
                 Log.e(TAG,  pitch + " vs " + Answer_pitches[temp_ptr] + " || gap : " + tmp_gap);
 
-                if(tmp_gap <= 2 && actualScore[temp_ptr / 2] < needs[temp_ptr / 2]) {
+                if(tmp_gap < 2 && actualScore[temp_ptr / 2] < needs[temp_ptr / 2]) {
                     actualScore[temp_ptr / 2]++;
                 }
                 i++;
@@ -132,10 +211,9 @@ public class Scoring {
      *
      * @return percent of corrected note
      */
-    public double getResult(ArrayList<Integer> ip_pitches, ArrayList<Double> ip_timeStamp) {
+    public double getResult() {
         double tmp_total = 0, tmp_score = 0;
-        grading(ip_pitches, ip_timeStamp);
-
+        makeScore();
 
         for(int i = 0; i < needs.length; i++) {
             tmp_total += needs[i];

@@ -32,7 +32,9 @@ import com.example.inha_capston.handling_audio.noteConverter;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
@@ -44,6 +46,7 @@ import be.tarsos.dsp.io.android.AudioDispatcherFactory;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
+import be.tarsos.dsp.writer.WriterProcessor;
 
 
 /**
@@ -139,26 +142,23 @@ public class PlayFragment extends Fragment
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        AudioSetting();
-    }
 
     private void AudioSetting() {
         // AnswerSheet and scoring class init Load
-        answerSheet = (AnswerSheet)getArguments().getSerializable("ANSWER_SHEET");
-        scoring = new Scoring(answerSheet);
-        scoring_pitchList = new ArrayList<>();
-        scoring_timeStampList = new ArrayList<>();
+        if(getArguments() != null)
+            answerSheet = (AnswerSheet)getArguments().getSerializable("ANSWER_SHEET");
 
         if(answerSheet == null) {
             Toast.makeText(mContext, "파일을 불러오는 도중 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
+            navController.popBackStack();
             navController.navigate(R.id.action_playFragment_to_audioListFragment);
             return;
         }
 
-        // Record setting
+        scoring = new Scoring(mContext, answerSheet);
+        scoring_pitchList = new ArrayList<>();
+        scoring_timeStampList = new ArrayList<>();
+
         PitchDetectionHandler pitchDetectionHandler = new PitchDetectionHandler()
         {
             @Override
@@ -190,9 +190,31 @@ public class PlayFragment extends Fragment
             return;
         }
 
+        TarsosDSPAudioFormat tarsosDSPAudioFormat = new TarsosDSPAudioFormat(TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
+                22050,
+                2 * 8,
+                1,
+                2 * 1,
+                22050,
+                ByteOrder.BIG_ENDIAN.equals(ByteOrder.nativeOrder()));
+
+        // pitch detection
         audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050,1024, 0);
         AudioProcessor pitchProcessor = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, 22050,1024, pitchDetectionHandler);
         audioDispatcher.addAudioProcessor(pitchProcessor);
+
+        // record voice
+        try {
+            String filename = "out.wav";
+            File file = new File(mContext.getDataDir(), filename);
+            RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
+
+            AudioProcessor writeProcessor = new WriterProcessor(tarsosDSPAudioFormat, randomAccessFile);
+            audioDispatcher.addAudioProcessor(writeProcessor);
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
         // Play setting
         mediaPlayer = new MediaPlayer();
@@ -214,10 +236,11 @@ public class PlayFragment extends Fragment
             public void onCompletion(MediaPlayer mp) {
                 // TODO : show result
                 stopRecord();
+
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        double result = scoring.getResult(scoring_pitchList, scoring_timeStampList);
+                        double result = scoring.getResult();
                         Log.e(TAG, result + " ");
                         detectionResult_textView.setText(String.valueOf(result));
                     }
@@ -258,7 +281,6 @@ public class PlayFragment extends Fragment
         Log.i(TAG, "startMusicTime" + SystemClock.elapsedRealtime());
         mediaPlayer.start();
     }
-
 
     /**
      *  stop record

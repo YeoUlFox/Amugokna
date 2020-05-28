@@ -83,22 +83,23 @@ public class AnswerSheetMaker
         };
 
         // detection start
-        isDetectSuccess = detectPitchfromFile(mContext, filePath);
+        isDetectSuccess = detectPitchfromOuterFile(mContext, filePath);
         printResultLog();
 
         if(isDetectSuccess) {
             trimAnswerSheet(3.0);
             removeNull_sNotes(0.0);
-            printResultLog();
+            //printResultLog();
 
-            trimAnswerSheet(2.0);
-            removeNull_sNotes(0.05);
-            printResultLog();
+            trimAnswerSheet(1.5);
+            removeNull_sNotes(0.1);
+            //printResultLog();
 
-            extendTimeStamp(2.0, 1.0);
+            extendTimeStamp(2.0, 0.8);
             printResultLog();
         }
     }
+
 
     /**
      * for debugging
@@ -165,7 +166,8 @@ public class AnswerSheetMaker
                             }
                         } // end 2nd for loop
 
-                        if(pos + 2 >= length) break;
+                        if(pos + 2 >= length)
+                            break;
                     }
                 }
                 else
@@ -204,10 +206,8 @@ public class AnswerSheetMaker
         {
             if(pitches.get(pos0) != null)
             {
-                for(int pos1 = pos0; pos1 < length;)
+                for(int pos1 = pos0 + 1; pos1 < length; pos1++)
                 {
-                    pos1++;
-
                     if(pitches.get(pos1) != null) {
                         if(timeStamps.get(pos1) - timeStamps.get(pos0) >  minTerm) {
                             tmp_pitches.add(pitches.get(pos0));
@@ -274,8 +274,8 @@ public class AnswerSheetMaker
 
         // import meta data from music file
         AnswerSheet answerSheet = new AnswerSheet(pitches, timeStamps);
-        answerSheet.setMetaTitle(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-        answerSheet.setMetaArtist(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+        //answerSheet.setMetaTitle(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        //answerSheet.setMetaArtist(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
         answerSheet.setFilePath(filePath);
 
         return answerSheet;
@@ -289,15 +289,15 @@ public class AnswerSheetMaker
      * @param path
      * @return success : true, else false
      */
-    private boolean detectPitchfromFile(Context mContext, String path)
+    private boolean detectPitchfromOuterFile(Context mContext, String path)
     {
         File audioFile = new File(path);
         filePath = audioFile.getAbsolutePath();
         File file = new File(mContext.getFilesDir(), "out.wav");    // output
 
         // for metadata
-        metadataRetriever = new MediaMetadataRetriever();
-        metadataRetriever.setDataSource(filePath);
+        //metadataRetriever = new MediaMetadataRetriever();
+        //metadataRetriever.setDataSource(filePath);
 
         // ffmpeg incoding and decoding
         int rc = FFmpeg.execute(getCommand(file.getAbsolutePath(), filePath, 22050, 0, -1));

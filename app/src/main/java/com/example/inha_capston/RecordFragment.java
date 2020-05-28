@@ -37,6 +37,7 @@ import androidx.navigation.Navigation;
 import com.example.inha_capston.handling_audio.AnswerSheet;
 import com.example.inha_capston.handling_audio.AnswerSheetMaker;
 import com.example.inha_capston.utility_class.LocalFileHandler;
+import com.example.inha_capston.utility_class.network.SocketClient;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -57,8 +58,12 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
     private Context mContext;       // getContext()
     private Activity mActivity;     // getActivity()
 
-    // UIs
+    // fragment transition
     private NavController navController;
+
+    // for
+    private boolean mShowDialog = false;
+    private AnswerSheet answerSheet;
 
     public RecordFragment() {
         // Required empty public constructor
@@ -147,7 +152,7 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
         // TODO : implement network interface and transport to server
 
         AnswerSheetMaker answerSheetMaker = new AnswerSheetMaker(mContext, getAbsolutePath(mContext, data.getData()));
-        AnswerSheet answerSheet = answerSheetMaker.makeAnswerSheet();
+        answerSheet = answerSheetMaker.makeAnswerSheet();
 
         if(answerSheet == null) {
             Toast.makeText(mContext, "파일을 불러오는 동안 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
@@ -155,45 +160,52 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
             return;
         }
 
-        if(inputFilename_saveLocal(answerSheet)) {
-            // fragment transition
-            navController.navigate(R.id.action_recordFragment_to_audioListFragment);
-        }
+        mShowDialog = true;
+
+        inputFilename_saveLocal(answerSheet);
+        navController.navigate(R.id.action_recordFragment_to_audioListFragment);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+//        if(!mShowDialog) {
+//            return;
+//        }
+//
+//        mShowDialog = false;
+//        inputFilename_saveLocal(answerSheet);
     }
 
     private boolean inputFilename_saveLocal(final AnswerSheet answerSheet)
     {
-        /*
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        builder.setTitle("입력해주세요");
+//        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+//        builder.setTitle("파일 이름은요?");
+//
+//        // Set up the input
+//        final EditText input = new EditText(mContext);
+//        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+//        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+//        builder.setView(input);
+//
+//        // Set up the buttons
+//        builder.setPositiveButton("완료", new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                answerSheet.setFileName(input.getText().toString());
+//            }
+//        });
+//        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                answerSheet.setFileName("untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date()));
+//                dialog.cancel();
+//            }
+//        });
+//        builder.show();
 
-        // Set up the input
-        final EditText input = new EditText(mContext);
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
-        builder.setView(input);
-
-        // Set up the buttons
-        builder.setPositiveButton("Summit", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                answerSheet.setFileName(input.getText().toString());
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-         */
-
-        // when music metadata(title) is null
-        if(answerSheet.getMetaTitle() == null || answerSheet.getFileName() == null) {
-            answerSheet.setFileName("untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date()));
-        }
+        answerSheet.setFileName("untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date()));
 
         return new LocalFileHandler(mContext, answerSheet.getFileName()).saveAnswerSheet(answerSheet);
     }
@@ -219,9 +231,7 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
                 final String[] split = docId.split(":");
                 final String type = split[0];
 
-                if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
-                }
+                return Environment.getExternalStorageDirectory() + "/" + split[1];
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {

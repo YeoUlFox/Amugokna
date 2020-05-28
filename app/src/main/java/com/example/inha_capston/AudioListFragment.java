@@ -1,7 +1,9 @@
 package com.example.inha_capston;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
@@ -15,9 +17,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Handler;
+import android.text.InputType;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -30,6 +35,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 public class AudioListFragment extends Fragment implements AudioListAdapter.onItemListClick {
 
@@ -46,6 +55,11 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     // Context
     private Context mContext;
     private Activity mActivity;
+
+    // AudioList Adapter
+    private AudioListAdapter audioListAdapter;
+    private ArrayList<File> audioFiles;
+    private File directory;
 
     public AudioListFragment() {
     }
@@ -73,18 +87,30 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
         // file path setting
         String path = mContext.getFilesDir().getAbsolutePath();
-        File directory = new File(path);
-        File[] audioFiles = directory.listFiles();
+        directory = new File(path);
+        audioFiles = new ArrayList<>();
+
+        // load file list
+        if(directory.listFiles() != null)
+            audioFiles.addAll(Arrays.asList(directory.listFiles()));
+
+        // remove tmp
+        for(int i = 0; i < audioFiles.size(); i++) {
+            if(audioFiles.get(i).getName().equals("out.wav")) {
+                audioFiles.remove(i);
+                break;
+            }
+        }
 
         // adapter and list View setting
-        AudioListAdapter audioListAdapter = new AudioListAdapter(audioFiles, this);
+        audioListAdapter = new AudioListAdapter(audioFiles, this);
         audioList_recyclerView.setHasFixedSize(true);
         audioList_recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         audioList_recyclerView.setAdapter(audioListAdapter);
     }
 
     @Override
-    public void onPlayClickListener(File file, int position) {
+    public void onPlayClick(File file, int position) {
         // for file data extract
         LocalFileHandler localFileHandler = new LocalFileHandler(mContext, file.getName());
         CurrentAnswerSheet = localFileHandler.loadAnswerSheet();
@@ -99,12 +125,11 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         // send object
         Bundle argument = new Bundle();
         argument.putSerializable("ANSWER_SHEET", CurrentAnswerSheet);
-
         navController.navigate(R.id.action_audioListFragment_to_playFragment, argument);
     }
 
     @Override
-    public void onItemClickListener(File file, int position) {
+    public void onItemClick(View v, File file, int position) {
         // for file data extract
         LocalFileHandler localFileHandler = new LocalFileHandler(mContext, file.getName());
         AnswerSheet loadedAnswerSheet = localFileHandler.loadAnswerSheet();
@@ -138,6 +163,101 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         }
         else
             playAudio(file_to_Play);
+    }
+
+    /**
+     * interface implementation
+     * @param file
+     * @param position
+     */
+    @Override
+    public void onItemLongClick(final File file, final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle(R.string.pick_action)
+                .setItems(R.array.action_array, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:
+                                // Rename
+                                renameFile(position);
+                                break;
+                            case 1:
+                                // Delete
+                                removeFile(position);
+                                break;
+                            default:
+                                dialog.dismiss();
+                                break;
+                        }
+                    }
+                })
+                .show();
+    }
+
+    private void renameFile(final int position) {
+        if(getArguments() != null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+            builder.setTitle("파일 이름은요?");
+
+            // Set up the input
+            final EditText input = new EditText(mContext);
+            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+            builder.setView(input);
+
+            // Set up the buttons
+            builder.setPositiveButton("완료", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String filename = input.getText().toString();
+
+                    if(isValidFileName(filename)) {
+                        if(audioFiles.get(position).renameTo(new File(directory, filename)))
+                            audioListAdapter.notifyItemChanged(position);
+                    }
+                }
+            });
+
+            builder.show();
+        }
+    }
+
+    /**
+     * check length and invalid file char
+     * @param str string inputted
+     * @return true or false
+     */
+    private boolean isValidFileName(String str)
+    {
+        // exceed max length
+        if(str.length() > 100)
+            return false;
+
+        // check null
+        if(TextUtils.isEmpty(str))
+            return false;
+
+        // F
+        File f = new File(str);
+        try {
+            // not meaning
+            f.getCanonicalPath();
+            return true;
+        }
+        catch (IOException e) {
+            // invalid file name
+            return false;
+        }
+    }
+
+    private void removeFile(int position) {
+        File removed = audioFiles.get(position);
+
+        if(removed.delete()) {
+            audioFiles.remove(position);
+            audioListAdapter.notifyItemRemoved(position);
+        }
     }
 
     /**
