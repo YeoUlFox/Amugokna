@@ -135,40 +135,39 @@ public class AnswerSheetMaker
                 pos1_note = pitches.get(pos + 1);
                 pos1_time = timeStamps.get(pos + 1);
 
-                // check equal note
-                if(pos0_note == pos1_note)
+                // check equal note and term with pos1 (long check)
+                if(pos0_note == pos1_note && pos1_time - pos0_time <= minTerm)
                 {
-                    // check term with pos1 (long check)
-                    if (pos1_time - pos0_time > minTerm)
-                    {
-                        pitches.set(pos, null);
-                        timeStamps.set(pos, null);
-                        pos++;
-                    }
-                    else
-                    {
-                        // check continuous note
-                        for(;pos + 2 < length;) {
-                            pos0_note = pos1_note;
-                            pos0_time = pos1_time;
-                            pos1_note = pitches.get(pos + 2);
-                            pos1_time = timeStamps.get(pos + 2);
+                    // end with same two note
+                    if(pos + 2 >= length) break;
 
-                            if (pos0_note == pos1_note && pos1_time - pos0_time <= minTerm) {
-                                pitches.set(pos + 1, null);
-                                timeStamps.set(pos + 1, null);
-                                pos++;
-                            }
-                            else {
-                                // F - F - G or F - F -------- F
+                    // check continuous note
+                    for(;pos + 2 < length;) {
+                        pos0_note = pos1_note;
+                        pos0_time = pos1_time;
+                        pos1_note = pitches.get(pos + 2);
+                        pos1_time = timeStamps.get(pos + 2);
+
+                        if (pos0_note == pos1_note && pos1_time - pos0_time <= minTerm) {
+                            pitches.set(pos + 1, null);
+                            timeStamps.set(pos + 1, null);
+                            pos++;
+
+                            if(pos + 2 >= length) {
+                                // last on is same
+                                pitches.set(pos, null);
+                                timeStamps.set(pos, null);
                                 pos += 2;
                                 break;
                             }
-                        } // end 2nd for loop
+                        }
+                        else {
+                            // F - F - G or F - F -------- F
 
-                        if(pos + 2 >= length)
+                            pos += 2;
                             break;
-                    }
+                        }
+                    } // end 2nd for loop
                 }
                 else
                 {
