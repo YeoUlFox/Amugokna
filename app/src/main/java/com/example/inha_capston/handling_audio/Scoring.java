@@ -86,7 +86,7 @@ public class Scoring {
         final ArrayList<Double> timeStamps = new ArrayList<>();
         AudioDispatcher audioDispatcher;
 
-        File file = new File(mContext.getFilesDir(), "out.wav");    // output
+        File file = new File(mContext.getFilesDir(), "record_out.wav");    // output
 
         // audio dsp
         TarsosDSPAudioFormat tarsosDSPAudioFormat  = new TarsosDSPAudioFormat(TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
@@ -124,7 +124,8 @@ public class Scoring {
             Thread pitchThread = new Thread(audioDispatcher, "Pitch Detection Thread");
             pitchThread.start();
             pitchThread.join();                 // main thread will be waited
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             // interrupt while pitch detection
             Log.e(TAG, "Error while detection : " + e.getMessage());
 

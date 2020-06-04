@@ -151,6 +151,7 @@ public class PlayFragment extends Fragment
         if(answerSheet == null) {
             Toast.makeText(mContext, "파일을 불러오는 도중 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
             navController.popBackStack();
+            navController.popBackStack();
             navController.navigate(R.id.action_playFragment_to_audioListFragment);
             return;
         }
@@ -186,7 +187,9 @@ public class PlayFragment extends Fragment
 
         if (!checkPermissions()) {
             Toast.makeText(mContext, "마이크 사용을 허가 해주세요", Toast.LENGTH_LONG).show();
-            navController.navigate(R.id.action_playFragment_to_audioListFragment);
+            navController.popBackStack();
+            navController.popBackStack();
+            navController.navigate(R.id.action_recordFragment_to_waitFragment);
             return;
         }
 
@@ -205,7 +208,7 @@ public class PlayFragment extends Fragment
 
         // record voice
         try {
-            String filename = "out.wav";
+            String filename = "record_out.wav";
             File file = new File(mContext.getDataDir(), filename);
             RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
 
@@ -237,10 +240,11 @@ public class PlayFragment extends Fragment
                 // TODO : show result
                 stopRecord();
 
+                final double result = scoring.getResult();
+
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        double result = scoring.getResult();
                         Log.e(TAG, result + " ");
                         detectionResult_textView.setText(String.valueOf(result));
                     }

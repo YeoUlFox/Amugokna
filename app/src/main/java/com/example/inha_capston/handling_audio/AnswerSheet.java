@@ -11,6 +11,8 @@ import java.util.ArrayList;
  */
 public class AnswerSheet implements Serializable
 {
+    private static final long serialVersionUID = 123415134234523452L;
+
     private ArrayList<Integer> pitches;
     private ArrayList<Double> timeStamps;
 
@@ -28,6 +30,7 @@ public class AnswerSheet implements Serializable
     {
         this.pitches = pitches;
         this.timeStamps = timeStamps;
+        maxAccuracy = 0;
     }
 
     public void setMetaArtist(String metaArtist) { this.metaArtist = metaArtist; }
@@ -48,4 +51,12 @@ public class AnswerSheet implements Serializable
         return pitches;
     }
     public ArrayList<Double> getTimeStamps() { return timeStamps; }
+
+    public int getMaxAccuracy() {
+        return maxAccuracy;
+    }
+
+    public void setMaxAccuracy(int maxAccuracy) {
+        this.maxAccuracy = maxAccuracy;
+    }
 }

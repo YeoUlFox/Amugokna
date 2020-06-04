@@ -3,18 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/recordFragment"
-    >
+    app:startDestination="@id/recordFragment">
     <fragment
         android:id="@+id/recordFragment"
         android:name="com.example.inha_capston.RecordFragment"
         android:label="fragment_record"
         tools:layout="@layout/fragment_record" >
         <action
+            android:id="@+id/action_recordFragment_to_waitFragment"
+            app:destination="@id/waitFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/slide_in"/>
+        <action
             android:id="@+id/action_recordFragment_to_audioListFragment"
             app:destination="@id/audioListFragment"
             app:exitAnim="@anim/fade_out"
-            app:enterAnim="@anim/slide_in"/>
+            app:enterAnim="@anim/fade_in"/>
+        <action
+            android:id="@+id/action_recordFragment_to_optionFragment"
+            app:destination="@id/optionFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/fade_in"/>
     </fragment>
 
     <fragment
@@ -35,24 +44,17 @@
         android:label="fragment_play"
         tools:layout="@layout/fragment_play" >
         <action
+            android:id="@+id/action_playFragment_to_resultFragment"
+            app:destination="@id/resultFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/slide_in"/>
+        <action
             android:id="@+id/action_playFragment_to_audioListFragment"
             app:destination="@id/audioListFragment"
             app:exitAnim="@anim/fade_out"
-            app:enterAnim="@anim/slide_in">
-            <argument
-                android:name="args_answersheet"
-                app:argType="com.example.inha_capston.handling_audio.AnswerSheet" />
-        </action>
-        <action
-            android:id="@+id/action_playFragment_to_resultFragment"
-            app:destination="@id/resultFragment" />
+            app:enterAnim="@anim/fade_in"/>
 
     </fragment>
-    <fragment
-        android:id="@+id/stringInputFragment"
-        android:name="com.example.inha_capston.StringInputFragment"
-        android:label="fragment_string_input"
-        tools:layout="@layout/fragment_string_input" />
     <fragment
         android:id="@+id/resultFragment"
         android:name="com.example.inha_capston.ResultFragment"
@@ -60,6 +62,30 @@
         tools:layout="@layout/fragment_result" >
         <action
             android:id="@+id/action_resultFragment_to_audioListFragment"
-            app:destination="@id/audioListFragment" />
+            app:destination="@id/audioListFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/slide_in"/>
+    </fragment>
+    <fragment
+        android:id="@+id/waitFragment"
+        android:name="com.example.inha_capston.WaitFragment"
+        android:label="fragment_wait"
+        tools:layout="@layout/fragment_wait" >
+        <action
+            android:id="@+id/action_waitFragment_to_audioListFragment"
+            app:destination="@id/audioListFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/slide_in"/>
+    </fragment>
+    <fragment
+        android:id="@+id/optionFragment"
+        android:name="com.example.inha_capston.OptionFragment"
+        android:label="fragment_option"
+        tools:layout="@layout/fragment_option" >
+        <action
+            android:id="@+id/action_optionFragment_to_recordFragment"
+            app:destination="@id/recordFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/fade_in"/>
     </fragment>
 </navigation>

@@ -15,7 +15,16 @@
         <item>Rename</item>
         <item>Delete</item>
     </array>
+    <string name="audioList_List_is_null_text">생성한 답안지가 없습니다</string>
+    <string name="singleListItem_start_btn">시작</string>
+    <string name="singleListItem_preview_btn">미리듣기</string>
+
+    <!-- Wait Fragment Text -->
+    <string name="wait_frag_server_connect">서버에 연결중입니다</string>
+    <string name="wait_frag_server_reply">서버로부터 응답을 기다리고 있습니다. 시간이 소요 될 수 있습니다.</string>
+    <string name="wait_frag_server_make_answer_sheet">답안지를 만들고 있습니다.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

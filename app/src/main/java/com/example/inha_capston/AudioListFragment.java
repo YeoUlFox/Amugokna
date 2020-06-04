@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +47,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
     // for transition
     private NavController navController;
+    private TextView ListisNull_textView;
 
     // media variable
     private MediaPlayer mediaPlayer = null;
@@ -81,6 +83,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
+        ListisNull_textView = view.findViewById(R.id.audioListFrag_listIsNull_textView);
 
         // UI
         RecyclerView audioList_recyclerView = view.findViewById(R.id.audio_list_view);
@@ -96,7 +99,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
         // remove tmp
         for(int i = 0; i < audioFiles.size(); i++) {
-            if(audioFiles.get(i).getName().equals("out.wav")) {
+            if(audioFiles.get(i).getName().equals("out.wav") || audioFiles.get(i).getName().equals("record_out.wav")) {
                 audioFiles.remove(i);
                 break;
             }
@@ -105,8 +108,14 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         // adapter and list View setting
         audioListAdapter = new AudioListAdapter(audioFiles, this);
         audioList_recyclerView.setHasFixedSize(true);
-        audioList_recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        audioList_recyclerView.setLayoutManager(new LinearLayoutManager(mContext));
         audioList_recyclerView.setAdapter(audioListAdapter);
+
+        // show there is no answer Sheet in app
+        if(audioFiles.isEmpty())
+            ListisNull_textView.setVisibility(View.GONE);
+        else
+            ListisNull_textView.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -129,7 +138,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     }
 
     @Override
-    public void onItemClick(View v, File file, int position) {
+    public void onPrePlayClick(View v, File file, int position) {
         // for file data extract
         LocalFileHandler localFileHandler = new LocalFileHandler(mContext, file.getName());
         AnswerSheet loadedAnswerSheet = localFileHandler.loadAnswerSheet();
@@ -166,7 +175,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     }
 
     /**
-     * interface implementation
+     * interface implementation for rename and delete file
      * @param file
      * @param position
      */
@@ -195,32 +204,34 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                 .show();
     }
 
+    /**
+     * rename file of view model list
+     * @param position index of files
+     */
     private void renameFile(final int position) {
-        if(getArguments() != null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-            builder.setTitle("파일 이름은요?");
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("파일 이름은요?");
 
-            // Set up the input
-            final EditText input = new EditText(mContext);
-            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
-            builder.setView(input);
+        // Set up the input
+        final EditText input = new EditText(mContext);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+        builder.setView(input);
 
-            // Set up the buttons
-            builder.setPositiveButton("완료", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    String filename = input.getText().toString();
+        // Set up the buttons
+        builder.setPositiveButton("완료", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String filename = input.getText().toString();
 
-                    if(isValidFileName(filename)) {
-                        if(audioFiles.get(position).renameTo(new File(directory, filename)))
-                            audioListAdapter.notifyItemChanged(position);
-                    }
+                if(isValidFileName(filename)) {
+                    if(audioFiles.get(position).renameTo(new File(directory, filename)))
+                        audioListAdapter.notifyDataSetChanged();
                 }
-            });
+            }
+        });
 
-            builder.show();
-        }
+        builder.show();
     }
 
     /**

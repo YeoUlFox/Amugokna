@@ -41,7 +41,14 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
     @Override
     public void onBindViewHolder(@NonNull AudioListAdapter.AudioViewHolder holder, int position) {
         // list item initialization
-        holder.list_title.setText(audioFiles.get(position).getName());
+        String filename = audioFiles.get(position).getName().trim();
+        if(filename.length() >= 13) {
+            filename = filename.substring(0, 13) + "...";
+            holder.list_title.setText(filename);
+        }
+        else
+            holder.list_title.setText(filename);
+
         holder.list_date.setText(timeAgo.getTimeAgo(audioFiles.get(position).lastModified()));
     }
 
@@ -50,29 +57,36 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
 
     public class AudioViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         // single list view component
-        private ImageView list_image;
+        private Button list_playBtn;
+        private Button list_prePlayBtn;
         private TextView list_title;
         private TextView list_date;
 
         public AudioViewHolder(@NonNull View itemView) {
             super(itemView);
-            list_image = itemView.findViewById(R.id.single_list_play_Btn);
+            list_playBtn = itemView.findViewById(R.id.single_list_play_Btn);
+            list_prePlayBtn = itemView.findViewById(R.id.single_list_pre_play);
+
             list_title = itemView.findViewById(R.id.single_list_filename_textView);
             list_date = itemView.findViewById(R.id.single_list_date_textView);
 
-            list_image.setOnClickListener(this);
+            list_playBtn.setOnClickListener(this);
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            if (v instanceof ImageView)
-                // fragment transition
-                onItemListClick.onPlayClick(audioFiles.get(getAdapterPosition()), getAdapterPosition());
-            else
-                // play music
-                onItemListClick.onItemClick(v, audioFiles.get(getAdapterPosition()), getAdapterPosition());
+            switch(v.getId()) {
+                case R.id.single_list_play_Btn:
+                    // fragment transition
+                    onItemListClick.onPlayClick(audioFiles.get(getAdapterPosition()), getAdapterPosition());
+                    break;
+                case R.id.single_list_pre_play:
+                    // play music
+                    onItemListClick.onPrePlayClick(v, audioFiles.get(getAdapterPosition()), getAdapterPosition());
+                    break;
+            }
         }
 
         @Override
@@ -86,7 +100,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
      * interface for making to use parameter file with click
      */
     public interface  onItemListClick {
-        void  onItemClick(View v, File file, int position);
+        void  onPrePlayClick(View v, File file, int position);
         void  onPlayClick(File file, int position);
         void  onItemLongClick(File file, int position);
     }
