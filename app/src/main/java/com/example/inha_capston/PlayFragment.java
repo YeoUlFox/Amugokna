@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.icu.text.UnicodeSetSpanner;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
@@ -29,6 +30,11 @@ import android.widget.Toast;
 import com.example.inha_capston.handling_audio.AnswerSheet;
 import com.example.inha_capston.handling_audio.Scoring;
 import com.example.inha_capston.handling_audio.noteConverter;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
@@ -37,6 +43,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.List;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -62,16 +69,17 @@ public class PlayFragment extends Fragment
 
     // UIs
     private ImageView PlayButton;
-    private TextView musicName_textView;
     private TextView detectionResult_textView;
-    private SeekBar result_seekbar;
     private NavController navController;
+    private LineChart chart;
 
     // audio resources
     private AnswerSheet answerSheet;
     private MediaPlayer mediaPlayer;
     private AudioDispatcher audioDispatcher;
     private Thread pitchThread;
+
+    private int SongTime;
 
     // scoring
     private noteConverter noteConverter;
@@ -101,10 +109,9 @@ public class PlayFragment extends Fragment
         // for handling pitch detection result
         noteConverter = new noteConverter();
 
+        chart =  view.findViewById(R.id.paly_frag_chart);
         PlayButton = view.findViewById(R.id.PlayFragment_playBtn);
-        musicName_textView = view.findViewById(R.id.PlayFragment_music_name_textView);
         detectionResult_textView = view.findViewById(R.id.PlayFragment_test_TextView);
-        result_seekbar = view.findViewById(R.id.PlayFragment_ScoreSeekBar);
 
         PlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,6 +124,7 @@ public class PlayFragment extends Fragment
                 }
                 else {
                     AudioSetting();
+                    makeGraph();
                     playAudio();
                     recordAudio();
                     isPlaying = true;
@@ -148,8 +156,7 @@ public class PlayFragment extends Fragment
         if(getArguments() != null)
             answerSheet = (AnswerSheet)getArguments().getSerializable("ANSWER_SHEET");
 
-        if(answerSheet == null) {
-            Toast.makeText(mContext, "파일을 불러오는 도중 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
+        if(answerSheet == null || !checkPermissions()) {
             navController.popBackStack();
             navController.popBackStack();
             navController.navigate(R.id.action_playFragment_to_audioListFragment);
@@ -157,8 +164,6 @@ public class PlayFragment extends Fragment
         }
 
         scoring = new Scoring(mContext, answerSheet);
-        scoring_pitchList = new ArrayList<>();
-        scoring_timeStampList = new ArrayList<>();
 
         PitchDetectionHandler pitchDetectionHandler = new PitchDetectionHandler()
         {
@@ -167,31 +172,26 @@ public class PlayFragment extends Fragment
             {
                 final float pitchHz = res.getPitch();
                 final double timeStamp = e.getTimeStamp();
+
                 if(pitchHz != -1 && res.getProbability() > 0.95)
                 {
-                    scoring_pitchList.add(noteConverter.getNoteNum(pitchHz));
-                    scoring_timeStampList.add(timeStamp);
-
                     // show realtime result
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            detectionResult_textView.setText(noteConverter.getNoteName(pitchHz));
-                            scoring.getGap(noteConverter.getNoteNum(pitchHz), timeStamp);
-                            // result_seekbar.setProgress(); TODO: seekbar handling
+                            if(scoring.getGap(noteConverter.getNoteNum(pitchHz), timeStamp) >= 0)
+                            {
+                                detectionResult_textView.setText("+");
+                            }
+                            else
+                            {
+                                detectionResult_textView.setText("-");
+                            }
                         }
                     });
                 }
             }
         };
-
-        if (!checkPermissions()) {
-            Toast.makeText(mContext, "마이크 사용을 허가 해주세요", Toast.LENGTH_LONG).show();
-            navController.popBackStack();
-            navController.popBackStack();
-            navController.navigate(R.id.action_recordFragment_to_waitFragment);
-            return;
-        }
 
         TarsosDSPAudioFormat tarsosDSPAudioFormat = new TarsosDSPAudioFormat(TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
                 22050,
@@ -230,8 +230,6 @@ public class PlayFragment extends Fragment
         {
             e.printStackTrace();
         }
-        // update UIs
-        musicName_textView.setText(answerSheet.getMetaTitle());
 
         // media player callback (completed)
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -245,7 +243,7 @@ public class PlayFragment extends Fragment
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.e(TAG, result + " ");
+                        // Log.e(TAG, result + " ");
                         detectionResult_textView.setText(String.valueOf(result));
                     }
                 });
@@ -308,5 +306,52 @@ public class PlayFragment extends Fragment
         else
             ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.RECORD_AUDIO}, MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
         return false;
+    }
+
+    /**
+     * make result array for graph generation
+     *
+     * @param noteArr answer sheet
+     * @param timeArr answer sheet
+     * @return result of array for graph
+     */
+    private ArrayList<Integer> generateResultArr(ArrayList<Integer> noteArr,ArrayList<Double> timeArr){
+        ArrayList<Integer> ret_arr = new ArrayList<>();
+        double timeNow = 0.00;
+        double timeInterval = 0.03;
+
+        for(int i = 0; i < noteArr.size() - 2; i = i + 2)
+        {
+            while(timeNow < timeArr.get(i + 1)){
+                ret_arr.add(noteArr.get(i));
+                timeNow += timeInterval;
+            }
+        }
+
+        return ret_arr;
+    }
+
+    private void makeGraph(){
+        List<Entry> entries = new ArrayList<>();
+        ArrayList<Integer> resultArr=generateResultArr(answerSheet.getPitches(),answerSheet.getTimeStamps());
+
+        // get Song duration
+        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+        mediaMetadataRetriever.setDataSource(answerSheet.getFilePath());
+        String durationStr = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        int SongTime = Integer.parseInt(durationStr);
+
+        for(int i = 0; i < resultArr.size(); i++){
+            entries.add(new Entry(i, resultArr.get(i)));
+        }
+
+        LineDataSet set = new LineDataSet(entries,"Data Set 1");
+        ArrayList<LineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(set);
+
+        LineData data = new LineData(set);
+        chart.setData(data);
+        chart.setVisibleXRangeMaximum(10); //화면에 보이는 원소 개수 설정
+        chart.moveViewToAnimated(resultArr.size(), 0, YAxis.AxisDependency.LEFT, SongTime*1000);
     }
 }

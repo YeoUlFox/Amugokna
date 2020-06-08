@@ -35,6 +35,10 @@ android {
     }
 }
 
+repositories {
+    maven { url "https://jitpack.io" }
+}
+
 dependencies {
     // for tarsosDSP lib
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -43,6 +47,7 @@ dependencies {
     //implementation 'com.writingminds:FFmpegAndroid:0.3.2'
 
     implementation 'com.google.firebase:firebase-firestore:21.4.3'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
 
     implementation 'com.arthenica:mobile-ffmpeg-full:4.3.2'

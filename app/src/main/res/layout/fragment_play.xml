@@ -6,33 +6,21 @@
     android:layout_height="match_parent"
     tools:context=".PlayFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-
     <ImageView
         android:id="@+id/PlayFragment_playBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_margin="20dp"
         android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="20dp"
         android:src="@drawable/ic_play_arrow_24px"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/PlayFragment_music_name_textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="32sp"
-        android:fontFamily="casual"
-        android:text="곡 이름"
-        android:textAlignment="center"
-        app:layout_constraintTop_toBottomOf="@id/PlayFragment_playBtn"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-         />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/PlayFragment_test_TextView"
@@ -42,22 +30,26 @@
         android:text="..."
         android:textAlignment="center"
         android:textSize="32sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/PlayFragment_music_name_textView" />
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintEnd_toEndOf="@+id/PlayFragment_playBtn"
+        app:layout_constraintStart_toStartOf="@+id/PlayFragment_playBtn"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/PlayFragment_playBtn" />
 
-    <SeekBar
-        android:id="@+id/PlayFragment_ScoreSeekBar"
-        style="@style/Widget.AppCompat.SeekBar.Discrete"
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/paly_frag_chart"
         android:layout_width="match_parent"
-        android:layout_height="30dp"
-        android:clickable="false"
-        android:focusable="false"
-        android:max="10"
-        android:progress="3"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/PlayFragment_test_TextView" />
+        app:layout_constraintTop_toBottomOf="@+id/PlayFragment_playBtn"
+        app:layout_constraintVertical_bias="0.0"
+        android:layout_marginTop="50dp"/>
+
+
 
 
 
