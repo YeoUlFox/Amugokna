@@ -12,6 +12,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -35,6 +36,7 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
@@ -69,9 +71,11 @@ public class PlayFragment extends Fragment
 
     // UIs
     private ImageView PlayButton;
-    private TextView detectionResult_textView;
+    private ImageView detectionResult_Image;
     private NavController navController;
     private LineChart chart;
+
+    //
 
     // audio resources
     private AnswerSheet answerSheet;
@@ -109,20 +113,22 @@ public class PlayFragment extends Fragment
         // for handling pitch detection result
         noteConverter = new noteConverter();
 
-        chart =  view.findViewById(R.id.paly_frag_chart);
+        chart =  view.findViewById(R.id.play_frag_chart);
         PlayButton = view.findViewById(R.id.PlayFragment_playBtn);
-        detectionResult_textView = view.findViewById(R.id.PlayFragment_test_TextView);
+        detectionResult_Image = view.findViewById(R.id.PlayFragment_detectionResult_Image);
 
         PlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(isPlaying) {
                     // stop all
+                    PlayButton.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_play_circle_filled_24px));
                     stopAudio();
                     stopRecord();
                     isPlaying = false;
                 }
                 else {
+                    PlayButton.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_pause_circle_filled_24px));
                     AudioSetting();
                     makeGraph();
                     playAudio();
@@ -175,17 +181,20 @@ public class PlayFragment extends Fragment
 
                 if(pitchHz != -1 && res.getProbability() > 0.95)
                 {
+                    final int gap = scoring.getGap(noteConverter.getNoteNum(pitchHz), timeStamp);
+
                     // show realtime result
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if(scoring.getGap(noteConverter.getNoteNum(pitchHz), timeStamp) >= 0)
-                            {
-                                detectionResult_textView.setText("+");
+                            if(gap > 1) {
+                                detectionResult_Image.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_up));
                             }
-                            else
-                            {
-                                detectionResult_textView.setText("-");
+                            else if (gap < -1) {
+                                detectionResult_Image.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_down));
+                            }
+                            else {
+                                detectionResult_Image.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_ok));
                             }
                         }
                     });
@@ -235,18 +244,14 @@ public class PlayFragment extends Fragment
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                // TODO : show result
                 stopRecord();
 
                 final double result = scoring.getResult();
+                Bundle argument = new Bundle();
+                argument.putDouble("RESULT", result);
 
-                mActivity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Log.e(TAG, result + " ");
-                        detectionResult_textView.setText(String.valueOf(result));
-                    }
-                });
+                navController.popBackStack();
+                navController.navigate(R.id.action_playFragment_to_resultFragment, argument);
             }
         });
     }
@@ -289,8 +294,6 @@ public class PlayFragment extends Fragment
      */
     private void stopAudio() {
         // erase filename
-        detectionResult_textView.setText("");
-
         mediaPlayer.stop();
         mediaPlayer.release();
         mediaPlayer = null;
@@ -315,43 +318,63 @@ public class PlayFragment extends Fragment
      * @param timeArr answer sheet
      * @return result of array for graph
      */
-    private ArrayList<Integer> generateResultArr(ArrayList<Integer> noteArr,ArrayList<Double> timeArr){
-        ArrayList<Integer> ret_arr = new ArrayList<>();
-        double timeNow = 0.00;
-        double timeInterval = 0.03;
+    private LineData generateResultArr(ArrayList<Integer> noteArr,ArrayList<Float> timeArr){
+        float timeNow;
+        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
 
-        for(int i = 0; i < noteArr.size() - 2; i = i + 2)
-        {
-            while(timeNow < timeArr.get(i + 1)){
-                ret_arr.add(noteArr.get(i));
-                timeNow += timeInterval;
+        for(int i = 0; i < timeArr.size() - 2; i = i + 2){
+
+            List<Entry> entries = new ArrayList<>();
+            timeNow = 0;
+
+            while(timeNow <= timeArr.get(i)) {
+                timeNow += 0.05f;
             }
+
+            while(timeNow <= timeArr.get(i + 1)){
+                entries.add(new Entry(timeNow, noteArr.get(i)));
+                timeNow += 0.05f;
+            }
+
+            LineDataSet set1 = new LineDataSet(entries,"Music Note");
+            LineData data = new LineData(set1);
+            dataSets.add(set1);
         }
 
-        return ret_arr;
+        LineData resultData = new LineData(dataSets);
+        //모든 데이터셋을 resultData에 추가
+        return resultData;
+
     }
 
     private void makeGraph(){
-        List<Entry> entries = new ArrayList<>();
-        ArrayList<Integer> resultArr=generateResultArr(answerSheet.getPitches(),answerSheet.getTimeStamps());
-
         // get Song duration
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
         mediaMetadataRetriever.setDataSource(answerSheet.getFilePath());
         String durationStr = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         int SongTime = Integer.parseInt(durationStr);
 
-        for(int i = 0; i < resultArr.size(); i++){
-            entries.add(new Entry(i, resultArr.get(i)));
+        // data formatting
+        ArrayList<Float> tmp_float_TimeStamps = new ArrayList<>();
+        ArrayList<Integer> tmp_Pitches = new ArrayList<>(answerSheet.getPitches());
+        ArrayList<Double> tmp_double_TimeStamps = new ArrayList<>(answerSheet.getTimeStamps());
+
+        for(int i = 0; i < tmp_Pitches.size(); i++) {
+            tmp_Pitches.set(i, (tmp_Pitches.get(i) % 10) * 12 + (tmp_Pitches.get(i) / 10));
+            tmp_float_TimeStamps.add(tmp_double_TimeStamps.get(i).floatValue());
         }
 
-        LineDataSet set = new LineDataSet(entries,"Data Set 1");
-        ArrayList<LineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(set);
+        // set Data to chart
+        LineData resultData = generateResultArr(tmp_Pitches, tmp_float_TimeStamps);
+        chart.setData(resultData);
+        chart.setFocusable(false);
+        chart.setDragEnabled(false);
+        chart.setVisibleXRangeMaximum(3);
 
-        LineData data = new LineData(set);
-        chart.setData(data);
-        chart.setVisibleXRangeMaximum(10); //화면에 보이는 원소 개수 설정
-        chart.moveViewToAnimated(resultArr.size(), 0, YAxis.AxisDependency.LEFT, SongTime*1000);
+        chart.getXAxis().setLabelCount(2, true);
+        chart.getXAxis().setAxisMinimum(0.0f);
+        chart.getXAxis().setAxisMaximum(SongTime / 1000.0f);
+
+        chart.moveViewToAnimated(resultData.getDataSetCount(), 0, YAxis.AxisDependency.LEFT, SongTime); //화면 이동 애니메이션
     }
 }
