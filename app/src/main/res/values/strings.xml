@@ -19,6 +19,10 @@
     <string name="singleListItem_start_btn">시작</string>
     <string name="singleListItem_preview_btn">미리듣기</string>
 
+    <!-- OptionFragment -->
+    <string name="optionFrag_option1">빡빡하게</string>
+    <string name="optionFrag_option2">널널하게</string>
+
     <!-- Wait Fragment Text -->
     <string name="wait_frag_server_connect">서버에 연결중입니다</string>
     <string name="wait_frag_server_reply">서버로부터 응답을 기다리고 있습니다. 시간이 소요 될 수 있습니다.</string>

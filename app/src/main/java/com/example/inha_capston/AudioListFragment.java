@@ -226,7 +226,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
                 if(isValidFileName(filename)) {
                     if(audioFiles.get(position).renameTo(new File(directory, filename)))
-                        audioListAdapter.notifyDataSetChanged();
+                        navController.navigate(R.id.action_audioListFragment_to_recordFragment);
                 }
             }
         });

@@ -163,8 +163,6 @@ public class PlayFragment extends Fragment
             answerSheet = (AnswerSheet)getArguments().getSerializable("ANSWER_SHEET");
 
         if(answerSheet == null || !checkPermissions()) {
-            navController.popBackStack();
-            navController.popBackStack();
             navController.navigate(R.id.action_playFragment_to_audioListFragment);
             return;
         }
@@ -218,7 +216,7 @@ public class PlayFragment extends Fragment
         // record voice
         try {
             String filename = "record_out.wav";
-            File file = new File(mContext.getDataDir(), filename);
+            File file = new File(mContext.getFilesDir(), filename);
             RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
 
             AudioProcessor writeProcessor = new WriterProcessor(tarsosDSPAudioFormat, randomAccessFile);
@@ -245,12 +243,12 @@ public class PlayFragment extends Fragment
             @Override
             public void onCompletion(MediaPlayer mp) {
                 stopRecord();
+                scoring.makeScore();
 
-                final double result = scoring.getResult();
+                Log.e(TAG, scoring.getResult() + "");
+
                 Bundle argument = new Bundle();
-                argument.putDouble("RESULT", result);
-
-                navController.popBackStack();
+                argument.putSerializable("RESULT", scoring);
                 navController.navigate(R.id.action_playFragment_to_resultFragment, argument);
             }
         });
@@ -322,6 +320,11 @@ public class PlayFragment extends Fragment
         float timeNow;
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
 
+        List<Entry> tmp_entries = new ArrayList<>();
+        tmp_entries.add(new Entry(0, 0));
+        LineDataSet set0 = new LineDataSet(tmp_entries,"0");
+        dataSets.add(set0);
+
         for(int i = 0; i < timeArr.size() - 2; i = i + 2){
 
             List<Entry> entries = new ArrayList<>();
@@ -337,14 +340,12 @@ public class PlayFragment extends Fragment
             }
 
             LineDataSet set1 = new LineDataSet(entries,"Music Note");
-            LineData data = new LineData(set1);
             dataSets.add(set1);
         }
 
         LineData resultData = new LineData(dataSets);
         //모든 데이터셋을 resultData에 추가
         return resultData;
-
     }
 
     private void makeGraph(){

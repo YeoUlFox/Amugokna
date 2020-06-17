@@ -36,6 +36,13 @@
             app:destination="@id/playFragment"
             app:exitAnim="@anim/slide_in"
             app:enterAnim="@anim/fade_out"/>
+        <action
+            android:id="@+id/action_audioListFragment_to_recordFragment"
+            app:destination="@id/recordFragment"
+            app:popUpTo="@+id/recordFragment"
+            app:popUpToInclusive="true"
+            app:exitAnim="@anim/slide_in"
+            app:enterAnim="@anim/fade_out"/>
     </fragment>
 
     <fragment
@@ -51,6 +58,8 @@
         <action
             android:id="@+id/action_playFragment_to_audioListFragment"
             app:destination="@id/audioListFragment"
+            app:popUpTo="@+id/audioListFragment"
+            app:popUpToInclusive="true"
             app:exitAnim="@anim/fade_out"
             app:enterAnim="@anim/fade_in"/>
 
@@ -63,6 +72,8 @@
         <action
             android:id="@+id/action_resultFragment_to_audioListFragment"
             app:destination="@id/audioListFragment"
+            app:popUpTo="@+id/audioListFragment"
+            app:popUpToInclusive="true"
             app:exitAnim="@anim/fade_out"
             app:enterAnim="@anim/slide_in"/>
     </fragment>
@@ -85,6 +96,8 @@
         <action
             android:id="@+id/action_optionFragment_to_recordFragment"
             app:destination="@id/recordFragment"
+            app:popUpTo="@+id/recordFragment"
+            app:popUpToInclusive="true"
             app:exitAnim="@anim/fade_out"
             app:enterAnim="@anim/fade_in"/>
     </fragment>

@@ -10,6 +10,7 @@ import com.arthenica.mobileffmpeg.FFmpeg;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +30,7 @@ import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS;
 /**
  * class for scoring with answersheet object
  */
-public class Scoring {
+public class Scoring implements Serializable {
     // for sync
     private static final String TAG = "Scoring class";
 
@@ -40,10 +41,29 @@ public class Scoring {
     private Context mContext;
 
     private  int  listPtr;
+
     private Integer[] Answer_pitches;
     private Double[] Answer_timeStamps;
     private Long[] needs;       // how many detection result inputs to make it correct
     private Long[] actualScore; // correct count
+
+    private int Result_precent;
+
+    public Integer[] getAnswer_pitches() {
+        return Answer_pitches;
+    }
+
+    public Double[] getAnswer_timeStamps() {
+        return Answer_timeStamps;
+    }
+
+    public Long[] getNeeds() {
+        return needs;
+    }
+
+    public Long[] getActualScore() {
+        return actualScore;
+    }
 
     private static final double UNIT_TERM = 0.0908;
 
@@ -135,6 +155,7 @@ public class Scoring {
         }
 
         grading(pitches, timeStamps);
+        getResult();
     }
 
 
@@ -149,7 +170,7 @@ public class Scoring {
         {
             if (ip_timeStamp < Answer_timeStamps[listPtr])
                 // nothing
-                return 500;
+                return 0;
             else if(Answer_timeStamps[listPtr] < ip_timeStamp && ip_timeStamp < Answer_timeStamps[listPtr + 1]) {
                 //Log.i(TAG,  ip_note + " vs " + Answer_pitches[listPtr]);
                 return Cal_interval(ip_note, Answer_pitches[listPtr]);
@@ -159,7 +180,7 @@ public class Scoring {
                 listPtr += 2;
             }
         }
-        return 500;
+        return 0;
     }
 
     /**
@@ -214,7 +235,6 @@ public class Scoring {
      */
     public double getResult() {
         double tmp_total = 0, tmp_score = 0;
-        makeScore();
 
         for(int i = 0; i < needs.length; i++) {
             tmp_total += needs[i];
@@ -224,7 +244,8 @@ public class Scoring {
         Log.i(TAG, tmp_total + " ");
         Log.i(TAG, tmp_score + " ");
 
-        return tmp_score / tmp_total * 100;
+        Result_precent = (int)(tmp_score / tmp_total * 100);
+        return Result_precent;
     }
 
     // setters for calculate gap
