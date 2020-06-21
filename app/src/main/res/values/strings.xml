@@ -20,8 +20,21 @@
     <string name="singleListItem_preview_btn">미리듣기</string>
 
     <!-- OptionFragment -->
-    <string name="optionFrag_option1">빡빡하게</string>
-    <string name="optionFrag_option2">널널하게</string>
+    <string name="optionFrag_radioLabel">채점 옵션</string>
+    <string name="optionFrag_option1">더 세세하게</string>
+    <string name="optionFrag_option2">더 쉽게</string>
+
+    <string name="waitFrag_shiftLabel">얼마나 높이거나 낮출것인지 입력</string>
+    <string name="waitFrag_shiftAmount">0</string>
+
+
+    <!-- WaitFragment -->
+    <string name="waitFrag_radioLabel">곡의 장르를 선택해주세요</string>
+    <string name="waitFrag_option1">팝송</string>
+    <string name="waitFrag_option2">락</string>
+    <string name="waitFrag_option3">전자 음악</string>
+    <string name="waitFrag_option4">힙합</string>
+    <string name="waitFrag_option5">발라드</string>
 
     <!-- Wait Fragment Text -->
     <string name="wait_frag_server_connect">서버에 연결중입니다</string>

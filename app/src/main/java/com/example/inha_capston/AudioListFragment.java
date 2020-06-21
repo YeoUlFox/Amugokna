@@ -33,6 +33,7 @@ import com.example.inha_capston.adapter.AudioListAdapter;
 import com.example.inha_capston.handling_audio.AnswerSheet;
 import com.example.inha_capston.utility_class.LocalFileHandler;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,11 +98,14 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         if(directory.listFiles() != null)
             audioFiles.addAll(Arrays.asList(directory.listFiles()));
 
+
+        List<String> audioFilesList = new LocalFileHandler(mContext).ReadListOfFiles();
+
         // remove tmp
         for(int i = 0; i < audioFiles.size(); i++) {
-            if(audioFiles.get(i).getName().equals("out.wav") || audioFiles.get(i).getName().equals("record_out.wav")) {
+            if(audioFilesList.indexOf(audioFiles.get(i).getName()) < 0) {
                 audioFiles.remove(i);
-                break;
+                i = 0;
             }
         }
 
@@ -190,6 +194,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                             case 0:
                                 // Rename
                                 renameFile(position);
+                                navController.navigate(R.id.action_audioListFragment_to_recordFragment);
                                 break;
                             case 1:
                                 // Delete
@@ -209,7 +214,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
      * @param position index of files
      */
     private void renameFile(final int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(mContext);
         builder.setTitle("파일 이름은요?");
 
         // Set up the input
@@ -225,8 +230,10 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                 String filename = input.getText().toString();
 
                 if(isValidFileName(filename)) {
-                    if(audioFiles.get(position).renameTo(new File(directory, filename)))
-                        navController.navigate(R.id.action_audioListFragment_to_recordFragment);
+                    audioFiles.get(position).renameTo(new File(directory, filename));
+                    // add to local list file
+                    new LocalFileHandler(mContext).writeListOfFiles(filename);
+                    navController.navigate(R.id.action_audioListFragment_to_recordFragment);
                 }
             }
         });
@@ -311,7 +318,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         mediaPlayer = new MediaPlayer();
         try
         {
-            mediaPlayer.setDataSource(file_to_Play.getAbsolutePath());
+            mediaPlayer.setDataSource(new LocalFileHandler(mContext, file_to_Play.getAbsolutePath()).loadAnswerSheet().getPlayFile());
             mediaPlayer.prepare();
             mediaPlayer.start();
         }

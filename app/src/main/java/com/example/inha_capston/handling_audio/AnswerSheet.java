@@ -19,11 +19,32 @@ public class AnswerSheet implements Serializable
     // music data
     private String metaArtist;
     private String metaTitle;
-    private String fileName;
-    private String filePath;
+
+    private String fileName; //
+    private String filePath; // 분리된 보컬 파일
+
+    private String PlayFile;
+
+    private boolean isShifted;
+
+    public boolean isShifted() {
+        return isShifted;
+    }
+
+    public void setShifted(boolean shifted) {
+        isShifted = shifted;
+    }
+
+    public String getPlayFile() {
+        return PlayFile;
+    }
+
+    public void setPlayFile(String playFile) {
+        PlayFile = playFile;
+    }
 
     // Rank Saved
-    private int maxAccuracy; // TODO :
+    private int maxAccuracy; // TODO
     private char rank;
 
     public AnswerSheet(ArrayList<Integer> pitches, ArrayList<Double> timeStamps)

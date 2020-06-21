@@ -8,10 +8,22 @@
     tools:context=".OptionFragment">
 
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="1dp"
+        android:layout_margin="10dp"
+        android:text="@string/optionFrag_radioLabel"
+        app:layout_constraintBottom_toTopOf="@+id/option_frag_Scoring_radioGroup"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <RadioGroup
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
+        android:id="@+id/option_frag_Scoring_radioGroup"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -19,16 +31,16 @@
         app:layout_constraintVertical_bias="0.0">
 
         <RadioButton
-            android:id="@+id/radioButton"
+            android:id="@+id/ScoringOption_radioBtn1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/optionFrag_option1" />
 
         <RadioButton
-            android:id="@+id/radioButton2"
+            android:id="@+id/ScoringOption_radioBtn2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/optionFrag_option1" />
+            android:text="@string/optionFrag_option2" />
     </RadioGroup>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

@@ -87,6 +87,13 @@
             app:destination="@id/audioListFragment"
             app:exitAnim="@anim/fade_out"
             app:enterAnim="@anim/slide_in"/>
+        <action
+            android:id="@+id/action_waitFragment_to_recordFragment"
+            app:popUpTo="@+id/recordFragment"
+            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/fade_in"
+            app:popUpToInclusive="true"
+            app:destination="@id/recordFragment" />
     </fragment>
     <fragment
         android:id="@+id/optionFragment"

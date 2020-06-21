@@ -10,25 +10,112 @@
 
     <ProgressBar
         android:id="@+id/wait_frag_progressBar"
+        style="@style/Widget.AppCompat.ProgressBar"
         android:layout_width="200dp"
         android:layout_height="200dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/wait_frag_TextView"
+        android:id="@+id/wait_frag_genre_label_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:fontFamily="casual"
+        android:text="@string/waitFrag_radioLabel"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@+id/wait_genre_selection_radioGroup"
+        app:layout_constraintEnd_toEndOf="@+id/wait_genre_selection_radioGroup"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/wait_genre_selection_radioGroup" />
+
+    <RadioGroup
+        android:id="@+id/wait_genre_selection_radioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_margin="20dp"
+        android:layout_marginTop="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/wait_frag_progressBar"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/wait_frag_progressBar"
-        app:layout_constraintTop_toBottomOf="@+id/wait_frag_progressBar"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RadioButton
+            android:id="@+id/wait_frag_genre_pop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="casual"
+            android:text="@string/waitFrag_option1" />
+
+        <RadioButton
+            android:id="@+id/wait_frag_genre_rock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/waitFrag_option2" />
+
+        <RadioButton
+            android:id="@+id/wait_frag_genre_edm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="casual"
+            android:text="@string/waitFrag_option3" />
+
+        <RadioButton
+            android:id="@+id/wait_frag_genre_hiphop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="casual"
+            android:text="@string/waitFrag_option4" />
+
+        <RadioButton
+            android:id="@+id/wait_frag_genre_ballad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="casual"
+            android:text="@string/waitFrag_option5" />
+    </RadioGroup>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/wait_frag_floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:layout_margin="30dp"
+        android:src="@drawable/ic_input_black_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/wait_frag_shiftAmount_label_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/waitFrag_shiftLabel"
+        android:fontFamily="casual"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="@+id/wait_genre_selection_radioGroup"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/wait_genre_selection_radioGroup"
+        app:layout_constraintTop_toBottomOf="@+id/wait_genre_selection_radioGroup" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/wait_frag_shiftAmount_editText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:text="@string/waitFrag_shiftAmount"
+        android:inputType="numberSigned"
+        app:layout_constraintEnd_toEndOf="@+id/wait_frag_shiftAmount_label_textView"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/wait_frag_shiftAmount_label_textView"
+        app:layout_constraintTop_toBottomOf="@+id/wait_frag_shiftAmount_label_textView" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

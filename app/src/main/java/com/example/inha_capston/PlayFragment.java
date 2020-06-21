@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.icu.text.UnicodeSetSpanner;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
@@ -18,6 +19,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,6 +34,7 @@ import com.example.inha_capston.handling_audio.AnswerSheet;
 import com.example.inha_capston.handling_audio.Scoring;
 import com.example.inha_capston.handling_audio.noteConverter;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -117,7 +120,14 @@ public class PlayFragment extends Fragment
         PlayButton = view.findViewById(R.id.PlayFragment_playBtn);
         detectionResult_Image = view.findViewById(R.id.PlayFragment_detectionResult_Image);
 
-        PlayButton.setOnClickListener(new View.OnClickListener() {
+        // not play
+        AudioSetting();
+        makeGraph();
+        playAudio();
+        recordAudio();
+        isPlaying = true;
+
+        /*PlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(isPlaying) {
@@ -136,7 +146,7 @@ public class PlayFragment extends Fragment
                     isPlaying = true;
                 }
             }
-        });
+        });*/
     }
 
     @Override
@@ -230,7 +240,7 @@ public class PlayFragment extends Fragment
         mediaPlayer = new MediaPlayer();
         try
         {
-            mediaPlayer.setDataSource(answerSheet.getFilePath());
+            mediaPlayer.setDataSource(answerSheet.getPlayFile());
             mediaPlayer.prepare();
         }
         catch (IOException e)
@@ -340,6 +350,13 @@ public class PlayFragment extends Fragment
             }
 
             LineDataSet set1 = new LineDataSet(entries,"Music Note");
+            set1.setDrawCircleHole(false);
+            set1.setDrawCircles(false);
+            set1.setDrawValues(false);
+
+            set1.setColor(Color.WHITE);
+            set1.setLineWidth(3);
+
             dataSets.add(set1);
         }
 
@@ -365,6 +382,24 @@ public class PlayFragment extends Fragment
             tmp_float_TimeStamps.add(tmp_double_TimeStamps.get(i).floatValue());
         }
 
+        chart.setBackgroundColor(Color.rgb(87,87,87));///그래프 디자인
+        chart.getXAxis().setDrawGridLines(false);
+        chart.getAxisLeft().setDrawGridLines(false);
+
+        Description description=new Description();
+        description.setTextColor(Color.WHITE);
+        description.setText("채점중...");
+
+        chart.setDescription(description);
+        chart.setDrawBorders(true);
+        chart.setBorderWidth(1);
+        chart.setBorderColor(Color.rgb(192,189,186));
+
+        chart.getLegend().setEnabled(false);
+        chart.getAxisLeft().setDrawLabels(false);
+        chart.getAxisRight().setDrawLabels(false);
+        chart.getXAxis().setDrawLabels(false);
+
         // set Data to chart
         LineData resultData = generateResultArr(tmp_Pitches, tmp_float_TimeStamps);
         chart.setData(resultData);
@@ -376,6 +411,20 @@ public class PlayFragment extends Fragment
         chart.getXAxis().setAxisMinimum(0.0f);
         chart.getXAxis().setAxisMaximum(SongTime / 1000.0f);
 
-        chart.moveViewToAnimated(resultData.getDataSetCount(), 0, YAxis.AxisDependency.LEFT, SongTime); //화면 이동 애니메이션
+        final HandlerThread handlerThread = new HandlerThread("background-thread");
+        handlerThread.start();
+        final Handler handler = new Handler(handlerThread.getLooper());
+
+        final Runnable runnable = new Runnable() {
+            int count = 0;
+            public void run() {
+                // need to do tasks on the UI thread
+                chart.moveViewToX(count);
+                if (count++ < chart.getXChartMax())
+                    handler.postDelayed(this, 100);
+            }
+        };
+
+        // chart.moveViewToAnimated(resultData.getDataSetCount(), 0, YAxis.AxisDependency.LEFT, SongTime); //화면 이동 애니메이션
     }
 }

@@ -25,19 +25,33 @@ import androidx.navigation.Navigation;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.inha_capston.handling_audio.AnswerSheet;
 import com.example.inha_capston.handling_audio.AnswerSheetMaker;
+import com.example.inha_capston.utility_class.ComFire;
 import com.example.inha_capston.utility_class.LocalFileHandler;
 
+import com.example.inha_capston.utility_class.SharedPreferencesManager;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+
+import io.grpc.internal.SharedResourceHolder;
 
 
 /**
@@ -54,14 +68,30 @@ public class WaitFragment extends Fragment
     private Activity mActivity;
 
     // UI
-    private TextView wait_frag_testView;
-    private ProgressBar wait_frag_progressBar;
+    private RadioGroup radioGroup;
+    private RadioButton[] radioBtn;
+    private ProgressBar progressBar;
+    private TextView radioGroup_label_textview;
+    private TextView shiftAmount_label_textview;
+    private FloatingActionButton floatingActionButton;
+    private EditText shiftAmount_EditText;
+
+    private int[] radioBtnId = new int[]{R.id.wait_frag_genre_pop, R.id.wait_frag_genre_rock, R.id.wait_frag_genre_edm,
+            R.id.wait_frag_genre_hiphop, R.id.wait_frag_genre_ballad};
 
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
     private static final int REQUEST_AUDIO_MP3 = 1;             // for mp3 request Intent
 
     // for
     private AnswerSheet answerSheet;
+    private boolean isFileLoaded = false;
+    private String filepath_to_send;  // vocal path
+    private String filepath_to_play;  // play path
+
+    // for network
+    private Intent fromMusicData;
+    private ComFire cf;
+    private int shiftAmount;
 
 
     public WaitFragment() {
@@ -79,10 +109,98 @@ public class WaitFragment extends Fragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
-        wait_frag_testView = view.findViewById(R.id.wait_frag_TextView);
-        wait_frag_progressBar = view.findViewById(R.id.wait_frag_progressBar);
 
-        //TODO : network connection
+        progressBar = view.findViewById(R.id.wait_frag_progressBar);
+        floatingActionButton = view.findViewById(R.id.wait_frag_floatingActionButton);
+
+        radioGroup_label_textview = view.findViewById(R.id.wait_frag_genre_label_textView);
+        radioGroup = view.findViewById(R.id.wait_genre_selection_radioGroup);
+        radioBtn = new RadioButton[5];
+        for(int i = 0; i < 5; i ++) radioBtn[i] = view.findViewById(radioBtnId[i]);
+
+        shiftAmount_label_textview = view.findViewById(R.id.wait_frag_shiftAmount_label_textView);
+        shiftAmount_EditText = view.findViewById(R.id.wait_frag_shiftAmount_editText);
+
+        setViewVisible_onFile(false);
+
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setViewVisible_onFile(false);
+
+                // set Option bit
+                switch(radioGroup.getCheckedRadioButtonId()) {
+                    case R.id.wait_frag_genre_pop:
+                        SharedPreferencesManager.setGenreOptionValue(mContext, 0);
+                        break;
+                    case R.id.wait_frag_genre_rock:
+                        SharedPreferencesManager.setGenreOptionValue(mContext, 1);
+                        break;
+                    case R.id.wait_frag_genre_edm:
+                        SharedPreferencesManager.setGenreOptionValue(mContext, 2);
+                        break;
+                    case R.id.wait_frag_genre_hiphop:
+                        SharedPreferencesManager.setGenreOptionValue(mContext, 3);
+                        break;
+                    default: // wait_frag_genre_ballad
+                        SharedPreferencesManager.setGenreOptionValue(mContext, 4);
+                        break;
+                }
+
+                String editText_str = shiftAmount_EditText.getText().toString();
+                // check shiftAmount null
+                if(editText_str.matches("")) {
+                    Toast.makeText(mContext, "음정값을 입력해주세요", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                shiftAmount = Integer.parseInt(editText_str);
+
+                try {
+                    if(!cf.includesForUploadFiles(fromMusicData, shiftAmount)) {
+                        Log.e(TAG, "first server file load failed");
+                        Toast.makeText(mContext, "서버와의 연결을 확인해주세요", Toast.LENGTH_SHORT).show();
+                        navController.navigate(R.id.action_waitFragment_to_recordFragment);
+                        return;
+                    }
+                    Thread.sleep(120000);        // colab을 다녀오기위한 20초
+
+                    ArrayList<String> ret = cf.includesForDownloadFiles(fromMusicData);
+                    Thread.sleep(3000);         // 파일 write를 위한 3초
+
+                    if(ret.size() == 2) {
+                        filepath_to_send = ret.get(0);
+                        filepath_to_play = ret.get(1);
+                    }
+                    else {
+                        Log.e(TAG, "second server file download failed");
+                        Toast.makeText(mContext, "서버 파일 다운로드 실패", Toast.LENGTH_SHORT).show();
+                        navController.navigate(R.id.action_waitFragment_to_recordFragment);
+                        return;
+                    }
+
+                    Log.i(TAG, "file path : " + filepath_to_send);
+                    Log.i(TAG, "file path : " + filepath_to_play);
+                }
+                catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                AnswerSheetMaker answerSheetMaker = new AnswerSheetMaker(mContext, filepath_to_send);
+                answerSheet = answerSheetMaker.makeAnswerSheet();
+                answerSheet.setFileName(filepath_to_play);
+
+                if(answerSheet == null) {
+                    Toast.makeText(mContext, "파일을 불러오는 동안 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
+                    navController.navigate(R.id.action_waitFragment_to_recordFragment);
+                    Log.e(TAG, "make answer sheet return null");
+                    return;
+                }
+
+                inputFilename_saveLocal(answerSheet);
+                navController.navigate(R.id.action_waitFragment_to_audioListFragment);
+            }
+        });
 
         getMusicFileFromDevice();
     }
@@ -120,56 +238,69 @@ public class WaitFragment extends Fragment
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (data == null || resultCode != Activity.RESULT_OK || requestCode != REQUEST_AUDIO_MP3) {
-            Toast.makeText(mContext, "파일을 불러오는 동안 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
+            navController.navigate(R.id.action_waitFragment_to_recordFragment);
+            Toast.makeText(mContext, "로컬 파일을 불러오는 동안 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
             return;
         }
 
-        // TODO : implement network interface and transport to server
-        String filepath_to_send = getAbsolutePath(mContext, data.getData());
+        filepath_to_play = getAbsolutePath(mContext, data.getData());
+        filepath_to_send = null;
 
-        AnswerSheetMaker answerSheetMaker = new AnswerSheetMaker(mContext, filepath_to_send);
-        answerSheet = answerSheetMaker.makeAnswerSheet();
+        Log.i(TAG, "Music file open Success");
 
-        if(answerSheet == null) {
-            Toast.makeText(mContext, "파일을 불러오는 동안 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "make answer sheet return null");
-            return;
-        }
+        // firebase 통신
+        cf = new ComFire(mActivity, mContext);
+        fromMusicData = data;
 
-        inputFilename_saveLocal(answerSheet);
-        navController.navigate(R.id.action_waitFragment_to_audioListFragment);
+        setViewVisible_onFile(true);
     }
 
+    /**
+     *  view visible setting
+     * @param isFileLoaded true : progressbar on, false : progressbar off
+     */
+    private void setViewVisible_onFile(boolean isFileLoaded)
+    {
+        // view visiable setting
+        if(!isFileLoaded) {
+            for(int i = 0; i < 5; i++) radioBtn[i].setVisibility(View.INVISIBLE);
+            radioGroup_label_textview.setVisibility(View.INVISIBLE);
+
+            shiftAmount_label_textview.setVisibility(View.INVISIBLE);
+            shiftAmount_EditText.setVisibility(View.INVISIBLE);
+
+            floatingActionButton.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+        }
+        else {
+            for(int i = 0; i < 5; i++) radioBtn[i].setVisibility(View.VISIBLE);
+            radioGroup_label_textview.setVisibility(View.VISIBLE);
+
+            shiftAmount_label_textview.setVisibility(View.VISIBLE);
+            shiftAmount_EditText.setVisibility(View.VISIBLE);
+
+            floatingActionButton.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    /**
+     * save answerSheet file to local
+     * and update list file
+     * @param answerSheet
+     * @return
+     */
     private boolean inputFilename_saveLocal(final AnswerSheet answerSheet)
     {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-//        builder.setTitle("파일 이름은요?");
-//
-//        // Set up the input
-//        final EditText input = new EditText(mContext);
-//        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-//        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
-//        builder.setView(input);
-//
-//        // Set up the buttons
-//        builder.setPositiveButton("완료", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                answerSheet.setFileName(input.getText().toString());
-//            }
-//        });
-//        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                answerSheet.setFileName("untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date()));
-//                dialog.cancel();
-//            }
-//        });
-//        builder.show();
+        // "untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date())
 
-        answerSheet.setFileName("untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date()));
+        String textToWrite = filepath_to_play.substring(filepath_to_play.lastIndexOf("/"), filepath_to_play.length());
+        answerSheet.setFileName(textToWrite);
 
-        return new LocalFileHandler(mContext, answerSheet.getFileName()).saveAnswerSheet(answerSheet);
+        if(!(new LocalFileHandler(mContext).writeListOfFiles(textToWrite)))
+            return false;
+        else
+            return new LocalFileHandler(mContext, answerSheet.getFileName()).saveAnswerSheet(answerSheet);
     }
 
 

@@ -106,7 +106,7 @@ public class Scoring implements Serializable {
         final ArrayList<Double> timeStamps = new ArrayList<>();
         AudioDispatcher audioDispatcher;
 
-        File file = new File(mContext.getFilesDir(), "record_out.wav");    // output
+        File file = new File(mContext.getFilesDir(), "out.wav");    // output
 
         // audio dsp
         TarsosDSPAudioFormat tarsosDSPAudioFormat  = new TarsosDSPAudioFormat(TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
