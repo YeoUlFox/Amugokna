@@ -154,6 +154,7 @@ public class WaitFragment extends Fragment
                     return;
                 }
 
+
                 shiftAmount = Integer.parseInt(editText_str);
 
                 try {
@@ -186,9 +187,9 @@ public class WaitFragment extends Fragment
                     e.printStackTrace();
                 }
 
+
                 AnswerSheetMaker answerSheetMaker = new AnswerSheetMaker(mContext, filepath_to_send);
                 answerSheet = answerSheetMaker.makeAnswerSheet();
-                answerSheet.setFileName(filepath_to_play);
 
                 if(answerSheet == null) {
                     Toast.makeText(mContext, "파일을 불러오는 동안 문제가 발생하였습니다", Toast.LENGTH_LONG).show();
@@ -196,6 +197,7 @@ public class WaitFragment extends Fragment
                     Log.e(TAG, "make answer sheet return null");
                     return;
                 }
+                answerSheet.setPlayFile(filepath_to_play);
 
                 inputFilename_saveLocal(answerSheet);
                 navController.navigate(R.id.action_waitFragment_to_audioListFragment);
@@ -224,8 +226,11 @@ public class WaitFragment extends Fragment
             intent.setType("audio/*");
             startActivityForResult(Intent.createChooser(intent, "불러올 음악 파일을 선택해주세요"), REQUEST_AUDIO_MP3);
         }
-        else
+        else {
             Toast.makeText(mContext, "파일을 불러오는 동안 문제가 발생하였습니다 : 권한 문제", Toast.LENGTH_LONG).show();
+            navController.navigate(R.id.action_waitFragment_to_recordFragment);
+        }
+
     }
 
     /**
@@ -244,7 +249,7 @@ public class WaitFragment extends Fragment
         }
 
         filepath_to_play = getAbsolutePath(mContext, data.getData());
-        filepath_to_send = null;
+        filepath_to_send = getAbsolutePath(mContext, data.getData());
 
         Log.i(TAG, "Music file open Success");
 
@@ -294,7 +299,7 @@ public class WaitFragment extends Fragment
     {
         // "untitled_" + android.text.format.DateFormat.format("yyyy-MM-dd hh:mm:ss a", new Date())
 
-        String textToWrite = filepath_to_play.substring(filepath_to_play.lastIndexOf("/"), filepath_to_play.length());
+        String textToWrite = filepath_to_play.substring(filepath_to_play.lastIndexOf("/") + 1, filepath_to_play.length());
         answerSheet.setFileName(textToWrite);
 
         if(!(new LocalFileHandler(mContext).writeListOfFiles(textToWrite)))

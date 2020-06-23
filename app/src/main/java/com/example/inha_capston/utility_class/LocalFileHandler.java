@@ -39,7 +39,7 @@ public class LocalFileHandler
 
     public boolean writeListOfFiles(String str) {
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            FileOutputStream fileOutputStream = new FileOutputStream(file, true);
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream));
 
             if(str != null)

@@ -104,10 +104,17 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         // remove tmp
         for(int i = 0; i < audioFiles.size(); i++) {
             if(audioFilesList.indexOf(audioFiles.get(i).getName()) < 0) {
-                audioFiles.remove(i);
-                i = 0;
+                audioFiles.set(i, null);
             }
         }
+
+        ArrayList<File> tmp_audioFiles = new ArrayList<>();
+        for(int i = 0; i < audioFiles.size(); i++) {
+            if(audioFiles.get(i) != null)
+                tmp_audioFiles.add(audioFiles.get(i));
+        }
+
+        audioFiles = tmp_audioFiles;
 
         // adapter and list View setting
         audioListAdapter = new AudioListAdapter(audioFiles, this);
@@ -117,9 +124,9 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
         // show there is no answer Sheet in app
         if(audioFiles.isEmpty())
-            ListisNull_textView.setVisibility(View.GONE);
-        else
             ListisNull_textView.setVisibility(View.VISIBLE);
+        else
+            ListisNull_textView.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -166,7 +173,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
             }
         }
 
-        File file_to_Play = new File(CurrentAnswerSheet.getFilePath());
+        File file_to_Play = new File(CurrentAnswerSheet.getPlayFile());
 
         // play music preview
         if(isPlaying)
@@ -318,7 +325,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         mediaPlayer = new MediaPlayer();
         try
         {
-            mediaPlayer.setDataSource(new LocalFileHandler(mContext, file_to_Play.getAbsolutePath()).loadAnswerSheet().getPlayFile());
+            mediaPlayer.setDataSource(file_to_Play.getAbsolutePath());
             mediaPlayer.prepare();
             mediaPlayer.start();
         }

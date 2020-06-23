@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.arthenica.mobileffmpeg.Config;
 import com.arthenica.mobileffmpeg.FFmpeg;
+import com.example.inha_capston.utility_class.SharedPreferencesManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,6 +43,11 @@ public class Scoring implements Serializable {
 
     private  int  listPtr;
 
+    // scoring parameter
+    private int needGap;
+    private double needMakeUnit;
+    private double prob;
+
     private Integer[] Answer_pitches;
     private Double[] Answer_timeStamps;
     private Long[] needs;       // how many detection result inputs to make it correct
@@ -65,7 +71,7 @@ public class Scoring implements Serializable {
         return actualScore;
     }
 
-    private static final double UNIT_TERM = 0.0908;
+    private static final double UNIT_TERM = 0.3308;
 
     /**
      * constructor with pre-process (check term and calculate needs of number of input detection result)
@@ -81,6 +87,8 @@ public class Scoring implements Serializable {
         this.Answer_pitches = answerSheet.getPitches().toArray(new Integer[0]);
         this.Answer_timeStamps = answerSheet.getTimeStamps().toArray(new Double[0]);
 
+        takeOption();
+
         // for result
         long tmp_gap;
         needs = new Long[Answer_pitches.length / 2];
@@ -88,11 +96,28 @@ public class Scoring implements Serializable {
         Arrays.fill(actualScore, (long)0);
 
         for(int i = 0; i < Answer_pitches.length; i += 2) {
-             tmp_gap = Math.round((Answer_timeStamps[i + 1] - Answer_timeStamps[i]) / UNIT_TERM);
+             tmp_gap = Math.round((Answer_timeStamps[i + 1] - Answer_timeStamps[i]) / needMakeUnit);
             if(tmp_gap == 0)
                 needs[i / 2] = (long)(1);
             else
                 needs[i / 2] = tmp_gap;
+        }
+    }
+
+    /**
+     * load option value
+     */
+    public void takeOption()
+    {
+        switch (SharedPreferencesManager.getScoreOptionValue(mContext)) {
+            case 0:
+                needGap = 3;
+                needMakeUnit = 0.1807;
+                break;
+            case 1:
+                needGap = 1;
+                needMakeUnit = 0.0807;
+                break;
         }
     }
 
@@ -106,7 +131,7 @@ public class Scoring implements Serializable {
         final ArrayList<Double> timeStamps = new ArrayList<>();
         AudioDispatcher audioDispatcher;
 
-        File file = new File(mContext.getFilesDir(), "out.wav");    // output
+        File file = new File(mContext.getFilesDir(), "record_out.wav");    // output
 
         // audio dsp
         TarsosDSPAudioFormat tarsosDSPAudioFormat  = new TarsosDSPAudioFormat(TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
@@ -121,7 +146,7 @@ public class Scoring implements Serializable {
             @Override
             public void handlePitch(PitchDetectionResult res, AudioEvent e) {
                 final float pitchHz = res.getPitch();
-                if (res.isPitched() && pitchHz != -1 && res.getProbability() > 0.95) {
+                if (res.isPitched() && pitchHz != -1 && res.getProbability() > 0.90) {
                     pitches.add(converter.getNoteNum(pitchHz));
                     timeStamps.add(e.getTimeStamp());
                 }
@@ -213,15 +238,15 @@ public class Scoring implements Serializable {
                 i++;
             if(timeStamp >= Answer_timeStamps[temp_ptr] && timeStamp <= Answer_timeStamps[temp_ptr + 1]) {
                 tmp_gap = Math.abs(Cal_interval(pitch, Answer_pitches[temp_ptr]));
-                Log.e(TAG,  pitch + " vs " + Answer_pitches[temp_ptr] + " || gap : " + tmp_gap);
+                //Log.e(TAG,  pitch + " vs " + Answer_pitches[temp_ptr] + " || gap : " + tmp_gap);
 
-                if(tmp_gap < 2 && actualScore[temp_ptr / 2] < needs[temp_ptr / 2]) {
+                if(tmp_gap < needGap && actualScore[temp_ptr / 2] < needs[temp_ptr / 2]) {
                     actualScore[temp_ptr / 2]++;
                 }
                 i++;
             }
             else if(timeStamp > Answer_timeStamps[temp_ptr]) {
-                Log.i(TAG,  "ListPtr : " + temp_ptr);
+                //Log.i(TAG,  "ListPtr : " + temp_ptr);
                 temp_ptr += 2;
                 if(temp_ptr >= Answer_pitches.length)
                     return;
@@ -241,8 +266,8 @@ public class Scoring implements Serializable {
             tmp_score += actualScore[i];
         }
 
-        Log.i(TAG, tmp_total + " ");
-        Log.i(TAG, tmp_score + " ");
+        Log.i(TAG, tmp_total + " total");
+        Log.i(TAG, tmp_score + " score");
 
         Result_precent = (int)(tmp_score / tmp_total * 100);
         return Result_precent;

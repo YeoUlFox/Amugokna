@@ -71,8 +71,6 @@ public class ComFire {
     }
 
     public boolean includesForUploadFiles(Intent data, int keyadj) throws IOException, InterruptedException {
-        setUpload_flag(false);
-
         aquirePermission();
         String path= Environment.getExternalStorageDirectory().getPath();
         Log.i("mj",path);
@@ -111,17 +109,19 @@ public class ComFire {
             //UploadTask uploadTask = pitchRef.putFile(Uri.parse(mContext.getFilesDir()+"/"+pitchFile));
             UploadTask uploadTask = pitchRef.putStream(fr);
 
+            upload_flag = true;
+
             // Register observers to listen for when the download is done or if it fails
             uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception exception) {
-                    setUpload_flag(false);
+                    upload_flag = false;
                     // Handle unsuccessful uploads
                 }
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    setUpload_flag(true);
+                    upload_flag = true;
                     // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                     // ...
                 }
@@ -137,12 +137,12 @@ public class ComFire {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle unsuccessful uploads
-                setUpload_flag(false);
+                upload_flag = false;
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                setUpload_flag(true);
+                upload_flag = true;
                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                 // ...
             }
@@ -150,11 +150,6 @@ public class ComFire {
 
         return upload_flag;
     }
-
-    private void setUpload_flag(boolean flag) {
-        upload_flag = flag;
-    }
-
     ///////////업로드 끝
 
 
@@ -200,7 +195,7 @@ public class ComFire {
             @Override
             public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                 Log.i("firebase ",";local tem file created  created " +localFileVoc.getAbsolutePath().toString());
-                ret_pathes.add(localFileVoc.getAbsolutePath());
+
                 //  updateDb(timestamp,localFile.toString(),position);
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -210,6 +205,8 @@ public class ComFire {
 
             }
         });
+
+        ret_pathes.add(localFileVoc.getAbsolutePath());
 
         final File localFileOri = new File(rootPath,filePureName+"ori.wav");
         //localFile.createNewFile();
@@ -219,7 +216,7 @@ public class ComFire {
             @Override
             public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                 Log.i("firebase ",";local tem file created  created " +localFileOri.getAbsolutePath().toString());
-                ret_pathes.add(localFileOri.getAbsolutePath());
+
                 //  updateDb(timestamp,localFile.toString(),position);
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -229,6 +226,8 @@ public class ComFire {
 
             }
         });
+
+        ret_pathes.add(localFileOri.getAbsolutePath());
 
         return ret_pathes;
     }

@@ -71,7 +71,8 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             list_date = itemView.findViewById(R.id.single_list_date_textView);
 
             list_playBtn.setOnClickListener(this);
-            itemView.setOnClickListener(this);
+            list_prePlayBtn.setOnClickListener(this);
+
             itemView.setOnLongClickListener(this);
         }
 

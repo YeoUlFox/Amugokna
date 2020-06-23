@@ -79,6 +79,7 @@ public class PlayFragment extends Fragment
     private LineChart chart;
 
     //
+    private Runnable graphMove;
 
     // audio resources
     private AnswerSheet answerSheet;
@@ -117,7 +118,6 @@ public class PlayFragment extends Fragment
         noteConverter = new noteConverter();
 
         chart =  view.findViewById(R.id.play_frag_chart);
-        PlayButton = view.findViewById(R.id.PlayFragment_playBtn);
         detectionResult_Image = view.findViewById(R.id.PlayFragment_detectionResult_Image);
 
         // not play
@@ -163,6 +163,7 @@ public class PlayFragment extends Fragment
             stopAudio();
             stopRecord();
             isPlaying = false;
+            chart.clear();
         }
     }
 
@@ -236,6 +237,10 @@ public class PlayFragment extends Fragment
             e.printStackTrace();
         }
 
+        //TODO
+        //scoring.makeScore();
+        //Log.e(TAG, scoring.getResult() + "%%%%");
+
         // Play setting
         mediaPlayer = new MediaPlayer();
         try
@@ -247,6 +252,7 @@ public class PlayFragment extends Fragment
         {
             e.printStackTrace();
         }
+
 
         // media player callback (completed)
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -292,7 +298,7 @@ public class PlayFragment extends Fragment
      *  play music
      */
     private void playAudio() {
-        scoring.setMusicStartTime(SystemClock.elapsedRealtime());
+        // scoring.setMusicStartTime(SystemClock.elapsedRealtime());
         Log.i(TAG, "startMusicTime" + SystemClock.elapsedRealtime());
         mediaPlayer.start();
     }
@@ -318,6 +324,7 @@ public class PlayFragment extends Fragment
             ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.RECORD_AUDIO}, MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
         return false;
     }
+
 
     /**
      * make result array for graph generation
@@ -415,15 +422,23 @@ public class PlayFragment extends Fragment
         handlerThread.start();
         final Handler handler = new Handler(handlerThread.getLooper());
 
-        final Runnable runnable = new Runnable() {
-            int count = 0;
+        graphMove = new Runnable() {
+            float count = 0;
             public void run() {
                 // need to do tasks on the UI thread
-                chart.moveViewToX(count);
-                if (count++ < chart.getXChartMax())
+                mActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        chart.moveViewToX(count / 10);
+                    }
+                });
+                if (count++ < chart.getXChartMax() * 10) {
                     handler.postDelayed(this, 100);
+                }
             }
         };
+
+        graphMove.run();
 
         // chart.moveViewToAnimated(resultData.getDataSetCount(), 0, YAxis.AxisDependency.LEFT, SongTime); //화면 이동 애니메이션
     }

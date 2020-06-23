@@ -9,6 +9,7 @@ import android.widget.EditText;
 
 import com.arthenica.mobileffmpeg.Config;
 import com.arthenica.mobileffmpeg.FFmpeg;
+import com.example.inha_capston.utility_class.SharedPreferencesManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,6 +52,13 @@ public class AnswerSheetMaker
     private MediaMetadataRetriever metadataRetriever;
     private String filePath;
 
+    //
+    private double Trim_minTerm;
+    private double removeNull_Term;
+    private double extendTimeStamp_min;
+    private double extendTimeStamp_max;
+    private double prob;
+
     /**
      * constructor init variable and call pitch detection func
      * @param mContext mContext
@@ -75,7 +83,7 @@ public class AnswerSheetMaker
             @Override
             public void handlePitch(PitchDetectionResult res, AudioEvent e) {
                 final float pitchHz = res.getPitch();
-                if (res.isPitched() && pitchHz != -1 && res.getProbability() > 0.95) {
+                if (res.isPitched() && pitchHz != -1 && res.getProbability() > prob) {
                     pitches.add(converter.getNoteNum(pitchHz));
                     timeStamps.add(e.getTimeStamp());
                 }
@@ -86,17 +94,17 @@ public class AnswerSheetMaker
         isDetectSuccess = detectPitchfromOuterFile(mContext, filePath);
         printResultLog();
 
+        takeOption(mContext, 0);
+
         if(isDetectSuccess) {
-            trimAnswerSheet(3.0);
-            removeNull_sNotes(0.0);
+            trimAnswerSheet(Trim_minTerm);
+            removeNull_sNotes(removeNull_Term);
             //printResultLog();
 
-            trimAnswerSheet(1.5);
-            removeNull_sNotes(0.1);
             //printResultLog();
 
-            extendTimeStamp(2.0, 0.8);
-            printResultLog();
+            extendTimeStamp(extendTimeStamp_min, extendTimeStamp_max);
+            //printResultLog();
         }
     }
 
@@ -112,6 +120,42 @@ public class AnswerSheetMaker
         }
     }
 
+    /**
+     *  take option flag from sharedPreference
+     */
+    private void takeOption(Context mContext, int value)
+    {
+        switch(SharedPreferencesManager.getGenreOptionValue(mContext)) {
+            case 1:
+                Trim_minTerm = 2;
+                removeNull_Term = 0.05;
+                extendTimeStamp_min = 1;
+                extendTimeStamp_max = 0.5;
+                prob = 0.95;
+                break;
+            case 2:
+                Trim_minTerm = 2;
+                removeNull_Term = 0.05;
+                extendTimeStamp_min = 1;
+                extendTimeStamp_max = 0.5;
+                prob = 0.9;
+                break;
+            case 3:
+                Trim_minTerm = 1.5;
+                removeNull_Term = 0.045;
+                extendTimeStamp_min = 1;
+                extendTimeStamp_max = 0.5;
+                prob = 0.9;
+                break;
+            default:
+                Trim_minTerm = 2;
+                removeNull_Term = 0.04;
+                extendTimeStamp_min = 2;
+                extendTimeStamp_max = 1;
+                prob = 0.95;
+                break;
+        }
+    }
 
     /**
      * handle redundant pitches and noisy pitches
