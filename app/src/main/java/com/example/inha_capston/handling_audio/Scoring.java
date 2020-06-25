@@ -43,10 +43,23 @@ public class Scoring implements Serializable {
 
     private  int  listPtr;
 
+
+
     // scoring parameter
     private int needGap;
     private double needMakeUnit;
     private double prob;
+
+    public ArrayList<Integer> getUsr_pitches() {
+        return usr_pitches;
+    }
+
+    public ArrayList<Double> getUsr_timeStamps() {
+        return usr_timeStamps;
+    }
+
+    private ArrayList<Integer> usr_pitches;
+    private ArrayList<Double> usr_timeStamps;
 
     private Integer[] Answer_pitches;
     private Double[] Answer_timeStamps;
@@ -69,6 +82,10 @@ public class Scoring implements Serializable {
 
     public Long[] getActualScore() {
         return actualScore;
+    }
+
+    public AnswerSheet getAnswerSheet() {
+        return answerSheet;
     }
 
     private static final double UNIT_TERM = 0.3308;
@@ -226,6 +243,10 @@ public class Scoring implements Serializable {
     private void grading(ArrayList<Integer> ip_pitches, ArrayList<Double> ip_timeStamp)
     {
         int temp_ptr = 0, tmp_gap;
+
+        usr_pitches = ip_pitches;
+        usr_timeStamps = ip_timeStamp;
+
 
         int pitch;
         double timeStamp;

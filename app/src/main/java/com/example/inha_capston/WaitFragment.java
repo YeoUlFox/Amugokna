@@ -46,8 +46,11 @@ import com.example.inha_capston.utility_class.SharedPreferencesManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -157,6 +160,7 @@ public class WaitFragment extends Fragment
 
                 shiftAmount = Integer.parseInt(editText_str);
 
+
                 try {
                     if(!cf.includesForUploadFiles(fromMusicData, shiftAmount)) {
                         Log.e(TAG, "first server file load failed");
@@ -164,7 +168,8 @@ public class WaitFragment extends Fragment
                         navController.navigate(R.id.action_waitFragment_to_recordFragment);
                         return;
                     }
-                    Thread.sleep(120000);        // colab을 다녀오기위한 20초
+                    // TODO change value 00
+                    Thread.sleep(12000);        // colab을 다녀오기위한 20초
 
                     ArrayList<String> ret = cf.includesForDownloadFiles(fromMusicData);
                     Thread.sleep(3000);         // 파일 write를 위한 3초
@@ -188,6 +193,7 @@ public class WaitFragment extends Fragment
                 }
 
 
+
                 AnswerSheetMaker answerSheetMaker = new AnswerSheetMaker(mContext, filepath_to_send);
                 answerSheet = answerSheetMaker.makeAnswerSheet();
 
@@ -197,7 +203,7 @@ public class WaitFragment extends Fragment
                     Log.e(TAG, "make answer sheet return null");
                     return;
                 }
-                answerSheet.setPlayFile(filepath_to_play);
+                answerSheet.setPlayFile(writeMusic_External(filepath_to_play));
 
                 inputFilename_saveLocal(answerSheet);
                 navController.navigate(R.id.action_waitFragment_to_audioListFragment);
@@ -306,6 +312,74 @@ public class WaitFragment extends Fragment
             return false;
         else
             return new LocalFileHandler(mContext, answerSheet.getFileName()).saveAnswerSheet(answerSheet);
+    }
+
+    private String writeMusic_External(String playFilePath)
+    {
+        /*
+        File file = new File(playFilePath);
+        Log.i("writeFile", file.getAbsolutePath());
+
+        String sourcePath = Environment.getExternalStorageDirectory().getAbsolutePath()
+                + "/Music/" + playFilePath.substring(playFilePath.lastIndexOf("/") + 1, playFilePath.length());
+
+        Log.i("writeFile", sourcePath);
+
+        file.renameTo(new File(sourcePath));
+
+        return sourcePath;
+        */
+
+        String sourcePath = Environment.getExternalStorageDirectory().getAbsolutePath()
+                + "/Music/" + playFilePath.substring(playFilePath.lastIndexOf("/") + 1, playFilePath.length());
+
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        FileChannel in = null;
+        FileChannel out = null;
+
+        try
+        {
+            File backupFile = new File(sourcePath);
+            backupFile.createNewFile();
+
+            fis = new FileInputStream(new File(playFilePath));
+            fos = new FileOutputStream(backupFile);
+            in = fis.getChannel();
+            out = fos.getChannel();
+
+            long size = in.size();
+            in.transferTo(0, size, out);
+        }
+        catch (Throwable e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (fis != null) fis.close();
+            }
+            catch (Throwable ignore) {}
+
+            try {
+                if (fos != null) fos.close();
+            }
+            catch (Throwable ignore) {}
+
+            try {
+                if (in != null && in.isOpen())
+                    in.close();
+            }
+            catch (Throwable ignore) {}
+
+            try {
+                if (out != null && out.isOpen())
+                    out.close();
+            }
+            catch (Throwable ignore) {}
+        }
+
+        return sourcePath;
+
     }
 
 

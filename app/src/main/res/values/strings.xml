@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">이거 부르려고</string>
+    <string name="app_name">아무곡나</string>
 
     <!-- main fragment -->
     <string name="main_frag_sing_btn">Sing a song</string>

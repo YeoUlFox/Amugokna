@@ -101,6 +101,8 @@ public class AnswerSheetMaker
             removeNull_sNotes(removeNull_Term);
             //printResultLog();
 
+            trimAnswerSheet(Trim_minTerm / 2);
+            removeNull_sNotes(removeNull_Term);
             //printResultLog();
 
             extendTimeStamp(extendTimeStamp_min, extendTimeStamp_max);
@@ -207,7 +209,6 @@ public class AnswerSheetMaker
                         }
                         else {
                             // F - F - G or F - F -------- F
-
                             pos += 2;
                             break;
                         }

@@ -1,15 +1,18 @@
 package com.example.inha_capston;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -45,6 +48,8 @@ import java.util.List;
 public class AudioListFragment extends Fragment implements AudioListAdapter.onItemListClick {
 
     private String TAG = "AudioListFragment";
+
+    static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 3;
 
     // for transition
     private NavController navController;
@@ -85,6 +90,8 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
         ListisNull_textView = view.findViewById(R.id.audioListFrag_listIsNull_textView);
+
+        checkMikePermissions();
 
         // UI
         RecyclerView audioList_recyclerView = view.findViewById(R.id.audio_list_view);
@@ -240,7 +247,6 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                     audioFiles.get(position).renameTo(new File(directory, filename));
                     // add to local list file
                     new LocalFileHandler(mContext).writeListOfFiles(filename);
-                    navController.navigate(R.id.action_audioListFragment_to_recordFragment);
                 }
             }
         });
@@ -350,5 +356,17 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         super.onStop();
         if(isPlaying)
             stopAudio();
+    }
+
+    /**
+     * check permissions for mic recording
+     * @return true for yes
+     */
+    private boolean checkMikePermissions() {
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+            return true;
+        else
+            ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.RECORD_AUDIO}, MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
+        return false;
     }
 }

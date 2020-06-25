@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.icu.text.UnicodeSetSpanner;
+import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -18,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
@@ -43,10 +46,13 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -198,12 +204,15 @@ public class PlayFragment extends Fragment
                         public void run() {
                             if(gap > 1) {
                                 detectionResult_Image.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_up));
+                                //Log.e("Det", 1 + "");
                             }
                             else if (gap < -1) {
                                 detectionResult_Image.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_down));
+                                //Log.e("Det", -1 + "");
                             }
                             else {
                                 detectionResult_Image.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_ok));
+                                //Log.e("Det", 0 + "");
                             }
                         }
                     });
@@ -230,6 +239,8 @@ public class PlayFragment extends Fragment
             File file = new File(mContext.getFilesDir(), filename);
             RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
 
+            Log.e("PathTest", file.getAbsolutePath());
+
             AudioProcessor writeProcessor = new WriterProcessor(tarsosDSPAudioFormat, randomAccessFile);
             audioDispatcher.addAudioProcessor(writeProcessor);
         }
@@ -237,19 +248,21 @@ public class PlayFragment extends Fragment
             e.printStackTrace();
         }
 
-        //TODO
-        //scoring.makeScore();
-        //Log.e(TAG, scoring.getResult() + "%%%%");
 
         // Play setting
         mediaPlayer = new MediaPlayer();
         try
         {
+            Log.e("PathTest", answerSheet.getFilePath());
+            Log.e("PathTest", answerSheet.getPlayFile());
+
+
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
             mediaPlayer.setDataSource(answerSheet.getPlayFile());
             mediaPlayer.prepare();
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -375,7 +388,8 @@ public class PlayFragment extends Fragment
     private void makeGraph(){
         // get Song duration
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(answerSheet.getFilePath());
+
+        mediaMetadataRetriever.setDataSource(answerSheet.getPlayFile());
         String durationStr = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         int SongTime = Integer.parseInt(durationStr);
 
@@ -416,7 +430,7 @@ public class PlayFragment extends Fragment
 
         chart.getXAxis().setLabelCount(2, true);
         chart.getXAxis().setAxisMinimum(0.0f);
-        chart.getXAxis().setAxisMaximum(SongTime / 1000.0f);
+        chart.getXAxis().setAxisMaximum((SongTime + 5000) / 1000.0f);
 
         final HandlerThread handlerThread = new HandlerThread("background-thread");
         handlerThread.start();
@@ -432,8 +446,9 @@ public class PlayFragment extends Fragment
                         chart.moveViewToX(count / 10);
                     }
                 });
-                if (count++ < chart.getXChartMax() * 10) {
+                if (count++ < chart.getXAxis().getAxisMaximum() * 10) {
                     handler.postDelayed(this, 100);
+                    //Log.e("chart", )
                 }
             }
         };
